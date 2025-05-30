@@ -3,42 +3,58 @@
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import { ChevronLeft, ChevronRight } from "lucide-react"
+import {listBanners} from  "./../action/APIAction"
 
-const heroSlides = [
-  { id: 1, image: "https://cdn.shopify.com/s/files/1/1982/7331/files/1440_550_copy_3.png?v=1742922059" },
-  { id: 2, image: "https://prod-img.thesouledstore.com/public/theSoul/uploads/catalog/category/catban-820250526190515.jpg" },
-  { id: 3, image: "https://prod-img.thesouledstore.com/public/theSoul/storage/mobile-cms-media-prod/banner-images/home_page_banner_OJbJx7t.jpg" },
-]
+// const banners = [
+//   { id: 1, image: "https://cdn.shopify.com/s/files/1/1982/7331/files/1440_550_copy_3.png?v=1742922059" },
+//   { id: 2, image: "https://prod-img.thesouledstore.com/public/theSoul/uploads/catalog/category/catban-820250526190515.jpg" },
+//   { id: 3, image: "https://prod-img.thesouledstore.com/public/theSoul/storage/mobile-cms-media-prod/banner-images/home_page_banner_OJbJx7t.jpg" },
+// ]
 
 export function Hero() {
   const [currentSlide, setCurrentSlide] = useState(0)
+  const [banners, setBanners] = useState([])
+  
+  const fetchBanners = async() => {
+    const result = await listBanners()
+    if (result){
+      setBanners(result)
+    }
+  }
+
+  useEffect (()=>{
+    fetchBanners()
+  },[])
 
   useEffect(() => {
+    if (!banners) return
     const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % heroSlides.length)
+      setCurrentSlide((prev) => (prev + 1) % banners.length)
     }, 5000)
     return () => clearInterval(timer)
-  }, [])
+  }, [banners])
 
   const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % heroSlides.length)
+    setCurrentSlide((prev) => (prev + 1) % banners.length)
   }
 
   const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + heroSlides.length) % heroSlides.length)
+    setCurrentSlide((prev) => (prev - 1 + banners.length) % banners.length)
   }
 
   return (
-    <section className="relative h-[70vh] md:h-[80vh] overflow-hidden bg-gradient-to-r from-purple-50 to-pink-50">
+    <section className="relative h-[30vh] sm:h-[45vh] md:h-[65vh] overflow-hidden bg-gradient-to-r from-purple-50 to-pink-50">
+
+
       <div
         className="absolute inset-0 flex transition-transform duration-500 ease-in-out"
         style={{ transform: `translateX(-${currentSlide * 100}%)` }}
       >
-        {heroSlides.map((slide) => (
-          <div key={slide.id} className="w-full flex-shrink-0 relative flex justify-center items-center">
+        {banners.map((slide,index) => (
+          <div key={index} className="w-full flex-shrink-0 relative flex justify-center items-center">
             <Image
-              src={slide.image}
-              alt={`Slide ${slide.id}`}
+              src={slide?.image}
+              alt={`Slide ${index + 1}`}
               fill
               className="rounded-xl shadow-xl object-contain max-h-full"
             />
@@ -62,7 +78,7 @@ export function Hero() {
 
       {/* Dots */}
       <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-2">
-        {heroSlides.map((_, index) => (
+        {banners.map((_, index) => (
           <button
             key={index}
             onClick={() => setCurrentSlide(index)}

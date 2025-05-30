@@ -23,6 +23,10 @@ const product = {
     "/placeholder.svg?height=600&width=600",
     "/placeholder.svg?height=600&width=600",
     "/placeholder.svg?height=600&width=600",
+    "/placeholder.svg?height=600&width=600",
+    "/placeholder.svg?height=600&width=600",
+    "/placeholder.svg?height=600&width=600",
+    "/placeholder.svg?height=600&width=600",
   ],
   rating: 4.8,
   reviews: 124,
@@ -124,14 +128,14 @@ export default function ProductDetailPage() {
               className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
             />
           </div>
-          <div className="grid grid-cols-4 gap-2">
-            {product.images.map((image, index) => (
-              <button
-                key={index}
-                onClick={() => setSelectedImage(index)}
-                className={`aspect-square overflow-hidden rounded-lg border-2 transition-colors ${
-                  selectedImage === index ? "border-purple-500" : "border-gray-200"
-                }`}
+          <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-custom">
+  {product.images.map((image, index) => (
+    <button
+      key={index}
+      onClick={() => setSelectedImage(index)}
+      className={`flex-shrink-0 w-20 h-20 overflow-hidden rounded-lg border-2 transition-colors ${
+        selectedImage === index ? "border-purple-500" : "border-gray-200"
+      }`}
               >
                 <Image
                   src={image || "/placeholder.svg"}
@@ -141,7 +145,7 @@ export default function ProductDetailPage() {
                   className="w-full h-full object-cover"
                 />
               </button>
-            ))}
+            ))} 
           </div>
         </div>
 
@@ -219,17 +223,22 @@ export default function ProductDetailPage() {
           {/* Quantity */}
           <div>
             <h3 className="font-medium mb-3">Quantity</h3>
-            <div className="flex items-center gap-3">
-              <Button
+            <div className="flex items-center gap-3 border-purple-500">
+              <Button 
                 variant="outline"
                 size="icon"
-                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                className="border active:border-purple-500"
+                onClick={() => setQuantity(Math.max(1, quantity - 1))
+                }
                 disabled={quantity <= 1}
               >
                 <Minus className="h-4 w-4" />
               </Button>
               <span className="w-12 text-center font-medium">{quantity}</span>
-              <Button variant="outline" size="icon" onClick={() => setQuantity(quantity + 1)}>
+              <Button variant="outline"
+              className="border active:border-purple-500"
+              
+              size="icon" onClick={() => setQuantity(quantity + 1)}>
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
