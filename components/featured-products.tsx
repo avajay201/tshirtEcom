@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -9,56 +9,71 @@ import { Badge } from "@/components/ui/badge"
 import { Heart, ShoppingCart, Star } from "lucide-react"
 import { useCart } from "@/contexts/cart-context"
 import { useWishlist } from "@/contexts/wishlist-context"
+import { listHomeProducts } from "@/action/APIAction"
 
-const featuredProducts = [
-  {
-    id: 1,
-    name: "Classic White Tee",
-    price: 29.99,
-    originalPrice: 39.99,
-    image: "/placeholder.svg?height=400&width=400",
-    rating: 4.8,
-    reviews: 124,
-    isNew: false,
-    isSale: true,
-  },
-  {
-    id: 2,
-    name: "Vintage Graphic Tee",
-    price: 34.99,
-    image: "/placeholder.svg?height=400&width=400",
-    rating: 4.9,
-    reviews: 89,
-    isNew: true,
-    isSale: false,
-  },
-  {
-    id: 3,
-    name: "Premium Cotton Blend",
-    price: 42.99,
-    image: "/placeholder.svg?height=400&width=400",
-    rating: 4.7,
-    reviews: 156,
-    isNew: false,
-    isSale: false,
-  },
-  {
-    id: 4,
-    name: "Minimalist Design Tee",
-    price: 27.99,
-    originalPrice: 35.99,
-    image: "/placeholder.svg?height=400&width=400",
-    rating: 4.6,
-    reviews: 98,
-    isNew: false,
-    isSale: true,
-  },
-]
+// const featuredProducts = [
+//   {
+//     id: 1,
+//     name: "Classic White Tee",
+//     price: 29.99,
+//     originalPrice: 39.99,
+//     image: "/placeholder.svg?height=400&width=400",
+//     rating: 4.8,
+//     reviews: 124,
+//     isNew: false,
+//     isSale: true,
+//   },
+//   {
+//     id: 2,
+//     name: "Vintage Graphic Tee",
+//     price: 34.99,
+//     image: "/placeholder.svg?height=400&width=400",
+//     rating: 4.9,
+//     reviews: 89,
+//     isNew: true,
+//     isSale: false,
+//   },
+//   {
+//     id: 3,
+//     name: "Premium Cotton Blend",
+//     price: 42.99,
+//     image: "/placeholder.svg?height=400&width=400",
+//     rating: 4.7,
+//     reviews: 156,
+//     isNew: false,
+//     isSale: false,
+//   },
+//   {
+//     id: 4,
+//     name: "Minimalist Design Tee",
+//     price: 27.99,
+//     originalPrice: 35.99,
+//     image: "/placeholder.svg?height=400&width=400",
+//     rating: 4.6,
+//     reviews: 98,
+//     isNew: false,
+//     isSale: true,
+//   },
+// ]
 
 export function FeaturedProducts() {
   const { addItem } = useCart()
+  const [recommendedProducts, setRecommendedProducts] = useState([])
+  const [featuredProducts, setFeaturedProducts] = useState([]);
   const { addItem: addToWishlist, removeItem: removeFromWishlist, isInWishlist } = useWishlist()
   const [hoveredProduct, setHoveredProduct] = useState<number | null>(null)
+
+  const fetchProducts = async () => {
+    const result = await listHomeProducts();
+    if (result){
+      setFeaturedProducts(result.featured_products || []);
+      setRecommendedProducts(result.recommended_products || []);
+    }
+  };
+
+  useEffect(()=>{
+    fetchProducts()
+  }, []);
 
   const handleAddToCart = (product: any) => {
     addItem({
@@ -89,12 +104,12 @@ export function FeaturedProducts() {
     <>
      <section className="container mx-auto px-4 py-6 md:py-12" style = {{ marginTop : '2px' }}>
         <div className="text-center mb-5">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Reccomended Products</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Recomended Products</h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">Handpicked favorites that our customers love most</p>
         </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {featuredProducts.map((product) => (
+        {recommendedProducts.map((product) => (
           <Card
             key={product.id}
             className="group cursor-pointer overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
@@ -105,19 +120,19 @@ export function FeaturedProducts() {
               <div className="relative overflow-hidden">
                 <Link href={`/products/${product.id}`}>
                   <Image
-                    src={product.image || "/placeholder.svg"}
+                    src={product.variant.images[0].image || "/placeholder.svg"}
                     alt={product.name}
                     width={400}
                     height={400}
-                    className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
+                    className="w-full h-64 object-contain group-hover:scale-110 transition-transform duration-500"
                   />
                 </Link>
 
                 {/* Badges */}
-                <div className="absolute top-3 left-3 flex flex-col gap-2">
+                {/* <div className="absolute top-3 left-3 flex flex-col gap-2">
                   {product.isNew && <Badge className="bg-green-500 hover:bg-green-600">New</Badge>}
                   {product.isSale && <Badge className="bg-red-500 hover:bg-red-600">Sale</Badge>}
-                </div>
+                </div> */}
 
                 {/* Action Buttons */}
                 <div
@@ -167,7 +182,7 @@ export function FeaturedProducts() {
                   </h3>
                 </Link>
 
-                <div className="flex items-center gap-1 mb-2">
+                {/* <div className="flex items-center gap-1 mb-2">
                   <div className="flex items-center">
                     {[...Array(5)].map((_, i) => (
                       <Star
@@ -179,19 +194,26 @@ export function FeaturedProducts() {
                     ))}
                   </div>
                   <span className="text-sm text-gray-500">({product.reviews})</span>
-                </div>
+                </div> */}
 
                 <div className="flex items-center gap-2">
-                  <span className="text-xl font-bold text-gray-900">${product.price}</span>
-                  {product.originalPrice && (
-                    <span className="text-sm text-gray-500 line-through">${product.originalPrice}</span>
-                  )}
+                  <span className="text-xl font-bold text-gray-900">₹{product.base_price}</span>
+                  {/* {product.originalPrice && (
+                    <span className="text-sm text-gray-500 line-through">₹{product.originalPrice}</span>
+                  )} */}
                 </div>
               </div>
             </CardContent>
           </Card>
         ))}
-      </div>  
+      </div>
+      <div className="text-center mt-12">
+        <Link href="/products/?filter=recommended">
+          <Button size="lg" variant="outline" className="hover:bg-purple-50 hover:border-purple-300">
+            View All Products
+          </Button>
+        </Link>
+      </div>
     </section>
       
     <section className="container mx-auto px-4 py-6 md:py-12" style = {{ marginTop : '2px' }}>
@@ -212,11 +234,11 @@ export function FeaturedProducts() {
               <div className="relative overflow-hidden">
                 <Link href={`/products/${product.id}`}>
                   <Image
-                    src={product.image || "/placeholder.svg"}
+                    src={product.variant.images[0].image || "/placeholder.svg"}
                     alt={product.name}
                     width={400}
                     height={400}
-                    className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
+                    className="w-full h-64 object-contain group-hover:scale-110 transition-transform duration-500"
                   />
                 </Link>
 
@@ -274,7 +296,7 @@ export function FeaturedProducts() {
                   </h3>
                 </Link>
 
-                <div className="flex items-center gap-1 mb-2">
+                {/* <div className="flex items-center gap-1 mb-2">
                   <div className="flex items-center">
                     {[...Array(5)].map((_, i) => (
                       <Star
@@ -286,12 +308,12 @@ export function FeaturedProducts() {
                     ))}
                   </div>
                   <span className="text-sm text-gray-500">({product.reviews})</span>
-                </div>
+                </div> */}
 
                 <div className="flex items-center gap-2">
-                  <span className="text-xl font-bold text-gray-900">${product.price}</span>
+                  <span className="text-xl font-bold text-gray-900">₹{product.base_price}</span>
                   {product.originalPrice && (
-                    <span className="text-sm text-gray-500 line-through">${product.originalPrice}</span>
+                    <span className="text-sm text-gray-500 line-through">₹{product.originalPrice}</span>
                   )}
                 </div>
               </div>
