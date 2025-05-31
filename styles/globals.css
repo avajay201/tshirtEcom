@@ -92,3 +92,11 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+
+
+@media (min-width: 768px) {
+  .section-desktop-mt {
+    margin-top: 0;
+  }
+}

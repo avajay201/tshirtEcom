@@ -1,0 +1,6 @@
+contac-us ---> done
+    
+hover effect in mobile view
+adding section of reccomendation
+mobile view cart and wishlist correction
+product detail view scroll if more than 4 img,add quantity neon border ----> done

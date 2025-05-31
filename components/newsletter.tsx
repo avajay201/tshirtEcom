@@ -21,7 +21,7 @@ export function Newsletter() {
   }
 
   return (
-    <section className="bg-gradient-to-r from-purple-600 to-pink-600 py-16">
+    <section className="bg-gradient-to-r from-purple-600 to-pink-600 py-16" style = {{ marginTop : '2px' }}>
       <div className="container mx-auto px-4 text-center">
         <div className="max-w-2xl mx-auto">
           <Mail className="h-16 w-16 text-white mx-auto mb-6" />

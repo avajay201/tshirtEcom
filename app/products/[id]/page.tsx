@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
@@ -11,74 +11,44 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Heart, ShoppingCart, Star, Minus, Plus, Truck, Shield, RotateCcw } from "lucide-react"
 import { useCart } from "@/contexts/cart-context"
 import { useWishlist } from "@/contexts/wishlist-context"
+import { listProductDetails } from "@/action/APIAction"
 
-// Mock product data
-const product = {
-  id: 1,
-  name: "Classic White Tee",
-  price: 29.99,
-  originalPrice: 39.99,
-  images: [
-    "/placeholder.svg?height=600&width=600",
-    "/placeholder.svg?height=600&width=600",
-    "/placeholder.svg?height=600&width=600",
-    "/placeholder.svg?height=600&width=600",
-  ],
-  rating: 4.8,
-  reviews: 124,
-  description:
-    "Experience ultimate comfort with our Classic White Tee. Made from 100% premium cotton, this versatile piece is perfect for any casual occasion. The relaxed fit and soft fabric make it a wardrobe essential.",
-  features: [
-    "100% Premium Cotton",
-    "Pre-shrunk for perfect fit",
-    "Reinforced seams for durability",
-    "Machine washable",
-    "Available in multiple sizes",
-  ],
-  sizes: ["XS", "S", "M", "L", "XL", "XXL"],
-  colors: [
-    { name: "White", value: "#FFFFFF" },
-    { name: "Black", value: "#000000" },
-    { name: "Gray", value: "#6B7280" },
-    { name: "Navy", value: "#1E3A8A" },
-  ],
-  inStock: true,
-  category: "Men's Tees",
-}
-
-const reviews = [
-  {
-    id: 1,
-    name: "John Doe",
-    rating: 5,
-    date: "2024-01-15",
-    comment: "Amazing quality! The fabric is so soft and comfortable. Perfect fit and great value for money.",
-  },
-  {
-    id: 2,
-    name: "Sarah Smith",
-    rating: 4,
-    date: "2024-01-10",
-    comment: "Love this t-shirt! Great quality and the color is exactly as shown. Will definitely buy more.",
-  },
-  {
-    id: 3,
-    name: "Mike Johnson",
-    rating: 5,
-    date: "2024-01-05",
-    comment: "Excellent product. Fast shipping and the t-shirt exceeded my expectations. Highly recommended!",
-  },
-]
 
 export default function ProductDetailPage() {
   const params = useParams()
   const [selectedImage, setSelectedImage] = useState(0)
   const [selectedSize, setSelectedSize] = useState("")
-  const [selectedColor, setSelectedColor] = useState(product.colors[0])
+  const [selectedColor, setSelectedColor] = useState({})
   const [quantity, setQuantity] = useState(1)
+  const [product, setProduct] = useState({})
+  const [reviews, setReviews] = useState([])
+  const [varaintExists, setVariantExists] = useState(true)
 
   const { addItem } = useCart()
   const { addItem: addToWishlist, removeItem: removeFromWishlist, isInWishlist } = useWishlist()
+
+  const fetchProductDetails = async (filterQuery='') => {
+    const result = await listProductDetails(params.id, filterQuery)
+    if (result) {
+      setVariantExists(true);
+      setProduct(result)
+      if (!filterQuery){
+        setSelectedSize(result.sizes[0])
+        setSelectedColor(result.colors[0])
+      }
+      setSelectedImage(0)
+      setReviews(result.reviews || [])
+    } else {
+      console.error("Failed to fetch product details")
+      if (filterQuery) {
+        setVariantExists(false)
+      }
+    }
+  };
+
+  useEffect(() => {
+    fetchProductDetails();
+  }, []);
 
   const handleAddToCart = () => {
     if (!selectedSize) {
@@ -110,6 +80,24 @@ export default function ProductDetailPage() {
     }
   }
 
+  const handleVariantChange = (color_size, type) => {
+    let filterQuery = ''
+    if (type === 'color') {
+      filterQuery = `?color=${color_size.name}&size=${selectedSize}`;
+    }
+    else{
+      filterQuery = `?size=${color_size}&color=${selectedColor.name}`;
+    }
+
+    fetchProductDetails(filterQuery);
+
+    if (type === 'color') {
+      setSelectedColor(color_size);
+    } else {
+      setSelectedSize(color_size);
+    }
+  }
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
@@ -117,25 +105,24 @@ export default function ProductDetailPage() {
         <div className="space-y-4">
           <div className="aspect-square overflow-hidden rounded-lg bg-gray-100">
             <Image
-              src={product.images[selectedImage] || "/placeholder.svg"}
+              src={product.images && product.images[selectedImage].image || "/placeholder.svg"}
               alt={product.name}
               width={600}
               height={600}
               className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
             />
           </div>
-          <div className="grid grid-cols-4 gap-2">
-            {product.images.map((image, index) => (
+          <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-custom">
+            {product.images && product.images.map((image, index) => (
               <button
                 key={index}
                 onClick={() => setSelectedImage(index)}
-                className={`aspect-square overflow-hidden rounded-lg border-2 transition-colors ${
-                  selectedImage === index ? "border-purple-500" : "border-gray-200"
-                }`}
+                className={`flex-shrink-0 w-20 h-20 overflow-hidden rounded-lg border-2 transition-colors ${selectedImage === index ? "border-purple-500" : "border-gray-200"
+                  }`}
               >
                 <Image
-                  src={image || "/placeholder.svg"}
-                  alt={`${product.name} ${index + 1}`}
+                  src={image.image || "/placeholder.svg"}
+                  alt={`${image.alt_text} ${index + 1}`}
                   width={150}
                   height={150}
                   className="w-full h-full object-cover"
@@ -148,20 +135,19 @@ export default function ProductDetailPage() {
         {/* Product Details */}
         <div className="space-y-6">
           <div>
-            <Badge className="mb-2">{product.category}</Badge>
+            {/* <Badge className="mb-2">{product.category}</Badge> */}
             <h1 className="text-3xl font-bold text-gray-900 mb-2">{product.name}</h1>
             <div className="flex items-center gap-2 mb-4">
               <div className="flex items-center">
                 {[...Array(5)].map((_, i) => (
                   <Star
                     key={i}
-                    className={`h-5 w-5 ${
-                      i < Math.floor(product.rating) ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
-                    }`}
+                    className={`h-5 w-5 ${i < Math.floor(product.average_rating) ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
+                      }`}
                   />
                 ))}
               </div>
-              <span className="text-sm text-gray-600">({product.reviews} reviews)</span>
+              <span className="text-sm text-gray-600">({product.reviews?.length} reviews)</span>
             </div>
             <div className="flex items-center gap-3">
               <span className="text-3xl font-bold text-gray-900">${product.price}</span>
@@ -176,19 +162,24 @@ export default function ProductDetailPage() {
 
           <Separator />
 
+          {!varaintExists && (
+            <p style={{ color: 'red' }}>
+              Selected variant is currently unavailable.
+            </p>
+          )}
+
           {/* Color Selection */}
           <div>
             <h3 className="font-medium mb-3">Color: {selectedColor.name}</h3>
             <div className="flex gap-2">
-              {product.colors.map((color) => (
+              {product.colors && product.colors.map((color) => (
                 <button
                   key={color.name}
-                  onClick={() => setSelectedColor(color)}
-                  className={`w-8 h-8 rounded-full border-2 transition-all ${
-                    selectedColor.name === color.name
+                  onClick={() => handleVariantChange(color, 'color')}
+                  className={`w-8 h-8 rounded-full border-2 transition-all ${selectedColor.name === color.name
                       ? "border-purple-500 scale-110"
                       : "border-gray-300 hover:border-gray-400"
-                  }`}
+                    }`}
                   style={{ backgroundColor: color.value }}
                   title={color.name}
                 />
@@ -200,15 +191,14 @@ export default function ProductDetailPage() {
           <div>
             <h3 className="font-medium mb-3">Size</h3>
             <div className="grid grid-cols-6 gap-2">
-              {product.sizes.map((size) => (
+              {product.sizes && product.sizes.map((size) => (
                 <button
                   key={size}
-                  onClick={() => setSelectedSize(size)}
-                  className={`py-2 px-3 border rounded-md text-sm font-medium transition-colors ${
-                    selectedSize === size
+                  onClick={() => handleVariantChange(size, 'size')}
+                  className={`py-2 px-3 border rounded-md text-sm font-medium transition-colors ${selectedSize === size
                       ? "border-purple-500 bg-purple-50 text-purple-700"
                       : "border-gray-300 hover:border-gray-400"
-                  }`}
+                    }`}
                 >
                   {size}
                 </button>
@@ -219,19 +209,29 @@ export default function ProductDetailPage() {
           {/* Quantity */}
           <div>
             <h3 className="font-medium mb-3">Quantity</h3>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 border-purple-500">
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                className="border active:border-purple-500"
+                onClick={() => setQuantity(Math.max(1, quantity - 1))
+                }
                 disabled={quantity <= 1}
               >
                 <Minus className="h-4 w-4" />
               </Button>
               <span className="w-12 text-center font-medium">{quantity}</span>
-              <Button variant="outline" size="icon" onClick={() => setQuantity(quantity + 1)}>
+              <Button variant="outline"
+                className="border active:border-purple-500"
+
+                size="icon" onClick={() => {quantity < product.stock && setQuantity(quantity + 1);}}>
                 <Plus className="h-4 w-4" />
               </Button>
+              {quantity >= product.stock && (
+                <p style={{ color: 'red' }}>
+                  Maximum stock limit reached ({product.stock})
+                </p>
+              )}
             </div>
           </div>
 
@@ -278,13 +278,13 @@ export default function ProductDetailPage() {
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="description">Description</TabsTrigger>
             <TabsTrigger value="features">Features</TabsTrigger>
-            <TabsTrigger value="reviews">Reviews ({product.reviews})</TabsTrigger>
+            <TabsTrigger value="reviews">Reviews ({product.reviews ? product.reviews.length : 0})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="description" className="mt-6">
             <Card>
               <CardContent className="p-6">
-                <p className="text-gray-700 leading-relaxed">{product.description}</p>
+                {product.description ? <p className="text-gray-700 leading-relaxed">{product.description}</p> : <p className="text-gray-500 text-center">No description available.</p>}
               </CardContent>
             </Card>
           </TabsContent>
@@ -292,21 +292,23 @@ export default function ProductDetailPage() {
           <TabsContent value="features" className="mt-6">
             <Card>
               <CardContent className="p-6">
-                <ul className="space-y-2">
-                  {product.features.map((feature, index) => (
+                {product.features?.length > 0 ? <ul className="space-y-2">
+                  {product.features && product.features.map((feature, index) => (
                     <li key={index} className="flex items-center gap-2">
                       <div className="w-2 h-2 bg-purple-500 rounded-full" />
                       <span>{feature}</span>
                     </li>
                   ))}
                 </ul>
+                  :
+                  <p className="text-gray-500 text-center">No features available.</p>}
               </CardContent>
             </Card>
           </TabsContent>
 
           <TabsContent value="reviews" className="mt-6">
             <div className="space-y-6">
-              {reviews.map((review) => (
+              {reviews?.length > 0 ? reviews.map((review) => (
                 <Card key={review.id}>
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between mb-3">
@@ -316,19 +318,25 @@ export default function ProductDetailPage() {
                           {[...Array(5)].map((_, i) => (
                             <Star
                               key={i}
-                              className={`h-4 w-4 ${
-                                i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
-                              }`}
+                              className={`h-4 w-4 ${i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
+                                }`}
                             />
                           ))}
                         </div>
                       </div>
-                      <span className="text-sm text-gray-500">{review.date}</span>
+                      <span className="text-sm text-gray-500">{review.created_at}</span>
                     </div>
                     <p className="text-gray-700">{review.comment}</p>
                   </CardContent>
                 </Card>
-              ))}
+              ))
+                :
+                <Card>
+                  <CardContent className="p-6">
+                    <p className="text-gray-500 text-center">No reviews yet.</p>
+                  </CardContent>
+                </Card>
+              }
             </div>
           </TabsContent>
         </Tabs>

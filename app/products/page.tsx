@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -13,6 +13,7 @@ import { Slider } from "@/components/ui/slider"
 import { Heart, ShoppingCart, Star, Filter } from "lucide-react"
 import { useCart } from "@/contexts/cart-context"
 import { useWishlist } from "@/contexts/wishlist-context"
+// import { listProducts } from "@/action/APIAction"
 
 const products = [
   {
@@ -108,9 +109,23 @@ export default function ProductsPage() {
   const [priceRange, setPriceRange] = useState([0, 100])
   const [sortBy, setSortBy] = useState("featured")
   const [hoveredProduct, setHoveredProduct] = useState<number | null>(null)
+  // const [products, setProducts] = useState([]);
 
   const { addItem } = useCart()
   const { addItem: addToWishlist, removeItem: removeFromWishlist, isInWishlist } = useWishlist()
+
+  // const fetchProducts = async () => {
+  //   const result = await listProducts();
+  //   if (result) {
+  //     setProducts(result);
+  //   } else {
+  //     console.error("Failed to fetch products");
+  //   }
+  // };
+
+  // useEffect(() => {
+  //   fetchProducts();
+  // }, []);
 
   const filteredProducts = useMemo(() => {
     return products

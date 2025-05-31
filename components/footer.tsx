@@ -72,16 +72,7 @@ export function Footer() {
                   Track Order
                 </Link>
               </li>
-              <li>
-                <Link href="#" className="text-gray-400 hover:text-white transition-colors">
-                  Returns
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="text-gray-400 hover:text-white transition-colors">
-                  Size Guide
-                </Link>
-              </li>
+
             </ul>
           </div>
 

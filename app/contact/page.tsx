@@ -136,26 +136,6 @@ export default function ContactPage() {
             <CardContent className="p-6">
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <MapPin className="w-6 h-6 text-purple-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg mb-2">Visit Our Store</h3>
-                  <p className="text-gray-600">
-                    123 Fashion Street
-                    <br />
-                    Style City, SC 12345
-                    <br />
-                    United States
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                   <Phone className="w-6 h-6 text-purple-600" />
                 </div>
                 <div>
@@ -188,42 +168,12 @@ export default function ContactPage() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <Clock className="w-6 h-6 text-purple-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg mb-2">Store Hours</h3>
-                  <p className="text-gray-600">
-                    Monday - Friday: 9:00 AM - 8:00 PM
-                    <br />
-                    Saturday: 10:00 AM - 6:00 PM
-                    <br />
-                    Sunday: 12:00 PM - 5:00 PM
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          
         </div>
       </div>
 
-      {/* Map Section */}
-      <div className="mt-16">
-        <Card>
-          <CardContent className="p-0">
-            <div className="w-full h-96 bg-gray-200 rounded-lg flex items-center justify-center">
-              <div className="text-center">
-                <MapPin className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">Interactive map would be integrated here</p>
-                <p className="text-sm text-gray-400">123 Fashion Street, Style City, SC 12345</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+   
+      
     </div>
   )
 }

@@ -130,28 +130,7 @@ export default function AboutPage() {
       </section>
 
       {/* Team */}
-      <section>
-        <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">Meet Our Team</h2>
-        <div className="grid md:grid-cols-3 gap-8">
-          {team.map((member, index) => (
-            <Card key={index} className="text-center border-0 shadow-lg hover:shadow-xl transition-shadow">
-              <CardContent className="p-6">
-                <div className="relative w-32 h-32 mx-auto mb-4">
-                  <Image
-                    src={member.image || "/placeholder.svg"}
-                    alt={member.name}
-                    fill
-                    className="rounded-full object-cover"
-                  />
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-1">{member.name}</h3>
-                <p className="text-purple-600 font-medium mb-3">{member.role}</p>
-                <p className="text-gray-600 text-sm">{member.bio}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </section>
+  
     </div>
   )
 }
