@@ -15,6 +15,19 @@ export const listBanners = async () => {
   }
 };
 
+export const listProducts = async () => {
+  try {
+    const response = await axios.get(ENDPOINTS.list_product_details, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    return response.data;
+  } catch (e) {
+    console.log("Banner fetching error:", e);
+  }
+};
+
 export const listHomeProducts = async () => {
   try {
     const response = await axios.get(ENDPOINTS.list_home_products, {
@@ -28,7 +41,7 @@ export const listHomeProducts = async () => {
   }
 };
 
-export const listProductDetails = async (id, query) => {
+export const listProductDetails = async (id: number, query: string) => {
   try {
     const response = await axios.get(`${ENDPOINTS.list_product_details}/${id}/${query}`, {
       headers: {

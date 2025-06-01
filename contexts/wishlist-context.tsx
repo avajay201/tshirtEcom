@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useState, type ReactNode } from "react"
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
 
 interface WishlistItem {
   id: number
@@ -22,7 +22,17 @@ const WishlistContext = createContext<WishlistContextType | undefined>(undefined
 export function WishlistProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<WishlistItem[]>([])
 
+  useEffect(()=>{
+    const storedItems = localStorage.getItem("wishlist")
+    if (storedItems) {
+      setItems(JSON.parse(storedItems))
+    }
+  }, [])
+
   const addItem = (newItem: WishlistItem) => {
+    let wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]')
+    wishlist.push(newItem)
+    localStorage.setItem('wishlist', JSON.stringify(wishlist))
     setItems((prev) => {
       const exists = prev.find((item) => item.id === newItem.id)
       if (exists) return prev
@@ -31,6 +41,9 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
   }
 
   const removeItem = (id: number) => {
+    let wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]')
+    wishlist = wishlist.filter((item: any) => item.id !== id);
+    localStorage.setItem('wishlist', JSON.stringify(wishlist))
     setItems((prev) => prev.filter((item) => item.id !== id))
   }
 
@@ -39,6 +52,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
   }
 
   const clearWishlist = () => {
+    localStorage.setItem('wishlist', JSON.stringify([]))
     setItems([])
   }
 
