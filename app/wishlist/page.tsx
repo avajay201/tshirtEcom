@@ -12,18 +12,18 @@ export default function WishlistPage() {
   const { items, removeItem, clearWishlist } = useWishlist()
   const { addItem } = useCart()
 
-  const handleMoveToCart = (item: any) => {
-    addItem({
-      id: item.id,
-      name: item.name,
-      price: item.price,
-      image: item.image,
-      quantity: 1,
-      size: "M",
-      color: "Default",
-    })
-    removeItem(item.id)
-  }
+  // const handleMoveToCart = (item: any) => {
+  //   addItem({
+  //     id: item.id,
+  //     name: item.name,
+  //     price: item.price,
+  //     image: item.image,
+  //     quantity: 1,
+  //     size: "M",
+  //     color: "Default",
+  //   })
+  //   removeItem(item.id)
+  // }
 
   if (items.length === 0) {
     return (
@@ -63,7 +63,7 @@ export default function WishlistPage() {
                     alt={item.name}
                     width={300}
                     height={300}
-                    className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
+                    className="w-full h-64 object-contain group-hover:scale-105 transition-transform duration-300"
                   />
                 </Link>
                 <Button
@@ -82,16 +82,16 @@ export default function WishlistPage() {
                     {item.name}
                   </h3>
                 </Link>
-                <p className="text-xl font-bold text-gray-900 mb-4">${item.price}</p>
+                <p className="text-xl font-bold text-gray-900 mb-4">₹{item.price}</p>
 
                 <div className="space-y-2">
-                  <Button
+                  {/* <Button
                     onClick={() => handleMoveToCart(item)}
                     className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
                   >
                     <ShoppingCart className="w-4 h-4 mr-2" />
                     Move to Cart
-                  </Button>
+                  </Button> */}
                   <Link href={`/products/${item.id}`}>
                     <Button variant="outline" className="w-full">
                       View Details

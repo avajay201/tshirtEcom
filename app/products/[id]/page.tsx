@@ -24,7 +24,7 @@ export default function ProductDetailPage() {
   const [reviews, setReviews] = useState([])
   const [varaintExists, setVariantExists] = useState(true)
 
-  const { addItem } = useCart()
+  const { addItem, removeItem: removeFromCart, isInCart } = useCart()
   const { addItem: addToWishlist, removeItem: removeFromWishlist, isInWishlist } = useWishlist()
 
   const fetchProductDetails = async (filterQuery='') => {
@@ -56,15 +56,20 @@ export default function ProductDetailPage() {
       return
     }
 
-    addItem({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      image: product.images[0],
-      quantity: quantity,
-      size: selectedSize,
-      color: selectedColor.name,
-    })
+    if (isInCart(product.id)) {
+      removeFromCart(product.id)
+    } else {
+      addItem({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        image: product.images[0].image,
+        quantity: quantity,
+        size: selectedSize,
+        color: selectedColor.name,
+        stock: product.stock,
+      })
+    }
   }
 
   const handleWishlistToggle = () => {
@@ -75,7 +80,7 @@ export default function ProductDetailPage() {
         id: product.id,
         name: product.name,
         price: product.price,
-        image: product.images[0],
+        image: product.images[0].image,
       })
     }
   }
@@ -150,13 +155,13 @@ export default function ProductDetailPage() {
               <span className="text-sm text-gray-600">({product.reviews?.length} reviews)</span>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-3xl font-bold text-gray-900">${product.price}</span>
-              {product.originalPrice && (
+              <span className="text-3xl font-bold text-gray-900">₹{product.price}</span>
+              {/* {product.originalPrice && (
                 <span className="text-xl text-gray-500 line-through">${product.originalPrice}</span>
-              )}
-              {product.originalPrice && (
+              )} */}
+              {/* {product.originalPrice && (
                 <Badge className="bg-red-500">Save ${(product.originalPrice - product.price).toFixed(2)}</Badge>
-              )}
+              )} */}
             </div>
           </div>
 
@@ -223,8 +228,8 @@ export default function ProductDetailPage() {
               <span className="w-12 text-center font-medium">{quantity}</span>
               <Button variant="outline"
                 className="border active:border-purple-500"
-
-                size="icon" onClick={() => {quantity < product.stock && setQuantity(quantity + 1);}}>
+                disabled={!varaintExists}
+                size="icon" onClick={() => {quantity < product.stock && varaintExists && setQuantity(quantity + 1);}}>
                 <Plus className="h-4 w-4" />
               </Button>
               {quantity >= product.stock && (
@@ -238,14 +243,15 @@ export default function ProductDetailPage() {
           {/* Action Buttons */}
           <div className="space-y-3">
             <Button
-              onClick={handleAddToCart}
+              onClick={()=> varaintExists && handleAddToCart()}
               className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
               size="lg"
+              disabled={!varaintExists}
             >
               <ShoppingCart className="w-5 h-5 mr-2" />
-              Add to Cart
+              {isInCart(product.id) ? "Remove from Cart" : "Add to Cart"}
             </Button>
-            <Button variant="outline" onClick={handleWishlistToggle} className="w-full" size="lg">
+            <Button variant="outline" disabled={!varaintExists} onClick={()=> varaintExists && handleWishlistToggle()} className="w-full" size="lg">
               <Heart className={`w-5 h-5 mr-2 ${isInWishlist(product.id) ? "fill-red-500 text-red-500" : ""}`} />
               {isInWishlist(product.id) ? "Remove from Wishlist" : "Add to Wishlist"}
             </Button>

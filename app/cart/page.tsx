@@ -41,7 +41,7 @@ export default function CartPage() {
               <CardContent className="p-6">
                 <div className="flex items-center gap-4">
                   <div className="relative w-20 h-20 rounded-lg overflow-hidden bg-gray-100">
-                    <Image src={item.image || "/placeholder.svg"} alt={item.name} fill className="object-cover" />
+                    <Image src={item.image || "/placeholder.svg"} alt={item.name} fill className="object-contain" />
                   </div>
 
                   <div className="flex-1">
@@ -49,7 +49,7 @@ export default function CartPage() {
                     <p className="text-gray-600">
                       Size: {item.size} | Color: {item.color}
                     </p>
-                    <p className="text-lg font-bold text-purple-600">${item.price}</p>
+                    <p className="text-lg font-bold text-purple-600">₹{item.price}</p>
                   </div>
 
                   <div className="flex items-center gap-3">
@@ -62,9 +62,14 @@ export default function CartPage() {
                       <Minus className="h-4 w-4" />
                     </Button>
                     <span className="w-12 text-center font-medium">{item.quantity}</span>
-                    <Button variant="outline" size="icon" onClick={() => updateQuantity(item.id, item.quantity + 1)}>
+                    <Button variant="outline" size="icon" onClick={() => item.quantity < item.stock && updateQuantity(item.id, item.quantity + 1)}>
                       <Plus className="h-4 w-4" />
                     </Button>
+                    {item.quantity >= item.stock && (
+                      <p style={{ color: 'red' }}>
+                        Maximum stock limit reached ({item.stock})
+                      </p>
+                    )}
                   </div>
 
                   <Button
@@ -99,7 +104,7 @@ export default function CartPage() {
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span>Subtotal ({items.reduce((sum, item) => sum + item.quantity, 0)} items)</span>
-                  <span>${total.toFixed(2)}</span>
+                  <span>₹{total.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Shipping</span>
@@ -107,12 +112,12 @@ export default function CartPage() {
                 </div>
                 <div className="flex justify-between">
                   <span>Tax</span>
-                  <span>${(total * 0.08).toFixed(2)}</span>
+                  <span>₹{(total * 0.08).toFixed(2)}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between text-lg font-semibold">
                   <span>Total</span>
-                  <span>${(total * 1.08).toFixed(2)}</span>
+                  <span>₹{(total * 1.08).toFixed(2)}</span>
                 </div>
               </div>
 

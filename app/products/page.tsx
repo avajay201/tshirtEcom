@@ -5,7 +5,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+// import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -13,126 +13,45 @@ import { Slider } from "@/components/ui/slider"
 import { Heart, ShoppingCart, Star, Filter } from "lucide-react"
 import { useCart } from "@/contexts/cart-context"
 import { useWishlist } from "@/contexts/wishlist-context"
-// import { listProducts } from "@/action/APIAction"
+import { listProducts } from "@/action/APIAction"
 
-const products = [
-  {
-    id: 1,
-    name: "Classic White Tee",
-    price: 29.99,
-    originalPrice: 39.99,
-    image: "/placeholder.svg?height=400&width=400",
-    rating: 4.8,
-    reviews: 124,
-    category: "men",
-    color: "white",
-    size: ["XS", "S", "M", "L", "XL"],
-    isNew: false,
-    isSale: true,
-  },
-  {
-    id: 2,
-    name: "Vintage Graphic Tee",
-    price: 34.99,
-    image: "/placeholder.svg?height=400&width=400",
-    rating: 4.9,
-    reviews: 89,
-    category: "women",
-    color: "black",
-    size: ["S", "M", "L", "XL"],
-    isNew: true,
-    isSale: false,
-  },
-  {
-    id: 3,
-    name: "Premium Cotton Blend",
-    price: 42.99,
-    image: "/placeholder.svg?height=400&width=400",
-    rating: 4.7,
-    reviews: 156,
-    category: "men",
-    color: "blue",
-    size: ["M", "L", "XL", "XXL"],
-    isNew: false,
-    isSale: false,
-  },
-  {
-    id: 4,
-    name: "Kids Fun Design",
-    price: 19.99,
-    image: "/placeholder.svg?height=400&width=400",
-    rating: 4.6,
-    reviews: 67,
-    category: "kids",
-    color: "red",
-    size: ["XS", "S", "M"],
-    isNew: true,
-    isSale: false,
-  },
-  {
-    id: 5,
-    name: "Minimalist Design Tee",
-    price: 27.99,
-    originalPrice: 35.99,
-    image: "/placeholder.svg?height=400&width=400",
-    rating: 4.6,
-    reviews: 98,
-    category: "women",
-    color: "gray",
-    size: ["XS", "S", "M", "L"],
-    isNew: false,
-    isSale: true,
-  },
-  {
-    id: 6,
-    name: "Trending Streetwear",
-    price: 38.99,
-    image: "/placeholder.svg?height=400&width=400",
-    rating: 4.5,
-    reviews: 203,
-    category: "trending",
-    color: "black",
-    size: ["S", "M", "L", "XL"],
-    isNew: false,
-    isSale: false,
-  },
-]
 
-const categories = ["men", "women", "kids", "trending"]
+// const categories = ["men", "women", "kids", "trending"]
 const colors = ["white", "black", "blue", "red", "gray"]
-const sizes = ["XS", "S", "M", "L", "XL", "XXL"]
+const sizes = ["XS", "S", "M", "L", "XL"]
 
 export default function ProductsPage() {
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([])
+  // const [selectedCategories, setSelectedCategories] = useState<string[]>([])
   const [selectedColors, setSelectedColors] = useState<string[]>([])
   const [selectedSizes, setSelectedSizes] = useState<string[]>([])
-  const [priceRange, setPriceRange] = useState([0, 100])
+  const [priceRange, setPriceRange] = useState([0, 1000])
   const [sortBy, setSortBy] = useState("featured")
   const [hoveredProduct, setHoveredProduct] = useState<number | null>(null)
-  // const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState([]);
 
-  const { addItem } = useCart()
+  const { addItem, isInCart, removeItem: removeFromCart } = useCart()
   const { addItem: addToWishlist, removeItem: removeFromWishlist, isInWishlist } = useWishlist()
 
-  // const fetchProducts = async () => {
-  //   const result = await listProducts();
-  //   if (result) {
-  //     setProducts(result);
-  //   } else {
-  //     console.error("Failed to fetch products");
-  //   }
-  // };
+  const fetchProducts = async () => {
+    const result = await listProducts();
+    if (result) {
+      console.log('Fetched products:', result.results);
+      setProducts(result.results);
+    } else {
+      console.error("Failed to fetch products");
+    }
+  };
 
-  // useEffect(() => {
-  //   fetchProducts();
-  // }, []);
+  useEffect(() => {
+    fetchProducts();
+  }, []);
 
   const filteredProducts = useMemo(() => {
+    console.log('products>>', products)
     return products
       .filter((product) => {
-        if (selectedCategories.length > 0 && !selectedCategories.includes(product.category)) return false
-        if (selectedColors.length > 0 && !selectedColors.includes(product.color)) return false
-        if (selectedSizes.length > 0 && !product.size.some((size) => selectedSizes.includes(size))) return false
+        if (selectedColors.length > 0 && !product.colors.some((color) => selectedColors.includes(color.name.toLowerCase()))) return false
+        if (selectedSizes.length > 0 && !product.sizes.some((size) => selectedSizes.includes(size))) return false
         if (product.price < priceRange[0] || product.price > priceRange[1]) return false
         return true
       })
@@ -142,23 +61,25 @@ export default function ProductsPage() {
             return a.price - b.price
           case "price-high":
             return b.price - a.price
-          case "newest":
-            return b.isNew ? 1 : -1
-          case "rating":
-            return b.rating - a.rating
+          // case "newest":
+          //   return b.isNew ? 1 : -1
+          // case "rating":
+          //   return b.average_rating - a.average_rating
           default:
             return 0
         }
       })
-  }, [selectedCategories, selectedColors, selectedSizes, priceRange, sortBy])
+  }, [selectedColors, selectedSizes, priceRange, sortBy, products])
 
-  const handleCategoryChange = (category: string, checked: boolean) => {
-    if (checked) {
-      setSelectedCategories((prev) => [...prev, category])
-    } else {
-      setSelectedCategories((prev) => prev.filter((c) => c !== category))
-    }
-  }
+  console.log('filteredProducts>>', filteredProducts)
+
+  // const handleCategoryChange = (category: string, checked: boolean) => {
+  //   if (checked) {
+  //     setSelectedCategories((prev) => [...prev, category])
+  //   }else {
+  //     setSelectedCategories((prev) => prev.filter((c) => c !== category))
+  //   }
+  // }
 
   const handleColorChange = (color: string, checked: boolean) => {
     if (checked) {
@@ -177,15 +98,21 @@ export default function ProductsPage() {
   }
 
   const handleAddToCart = (product: any) => {
-    addItem({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      image: product.image,
-      quantity: 1,
-      size: "M",
-      color: product.color,
-    })
+    if (isInCart(product.id)) {
+      removeFromCart(product.id)
+    }
+    else{
+      addItem({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        image: product.images[0].image,
+        quantity: 1,
+        size: product.sizes[0],
+        color: product.colors[0].name,
+        stock: product.stock,
+      })
+    }
   }
 
   const handleWishlistToggle = (product: any) => {
@@ -196,7 +123,7 @@ export default function ProductsPage() {
         id: product.id,
         name: product.name,
         price: product.price,
-        image: product.image,
+        image: product.images[0].image,
       })
     }
   }
@@ -212,8 +139,20 @@ export default function ProductsPage() {
               <h2 className="text-xl font-semibold">Filters</h2>
             </div>
 
-            {/* Categories */}
+            {/* Price Range */}
             <div>
+              <h3 className="font-medium mb-3">Price Range</h3>
+              <div className="space-y-3">
+                <Slider value={priceRange} onValueChange={setPriceRange} max={1000} step={10} className="w-full" />
+                <div className="flex justify-between text-sm text-gray-600">
+                  <span>₹{priceRange[0]}</span>
+                  <span>₹{priceRange[1]}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Categories */}
+            {/* <div>
               <h3 className="font-medium mb-3">Categories</h3>
               <div className="space-y-2">
                 {categories.map((category) => (
@@ -229,7 +168,7 @@ export default function ProductsPage() {
                   </div>
                 ))}
               </div>
-            </div>
+            </div> */}
 
             {/* Colors */}
             <div>
@@ -269,17 +208,6 @@ export default function ProductsPage() {
               </div>
             </div>
 
-            {/* Price Range */}
-            <div>
-              <h3 className="font-medium mb-3">Price Range</h3>
-              <div className="space-y-3">
-                <Slider value={priceRange} onValueChange={setPriceRange} max={100} step={5} className="w-full" />
-                <div className="flex justify-between text-sm text-gray-600">
-                  <span>${priceRange[0]}</span>
-                  <span>${priceRange[1]}</span>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -297,10 +225,10 @@ export default function ProductsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="featured">Featured</SelectItem>
-                <SelectItem value="newest">Newest</SelectItem>
+                {/* <SelectItem value="newest">Newest</SelectItem> */}
                 <SelectItem value="price-low">Price: Low to High</SelectItem>
                 <SelectItem value="price-high">Price: High to Low</SelectItem>
-                <SelectItem value="rating">Highest Rated</SelectItem>
+                {/* <SelectItem value="rating">Highest Rated</SelectItem> */}
               </SelectContent>
             </Select>
           </div>
@@ -318,19 +246,19 @@ export default function ProductsPage() {
                   <div className="relative overflow-hidden">
                     <Link href={`/products/${product.id}`}>
                       <Image
-                        src={product.image || "/placeholder.svg"}
+                        src={product.images[0].image || "/placeholder.svg"}
                         alt={product.name}
                         width={400}
                         height={400}
-                        className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
+                        className="w-full h-64 object-contain group-hover:scale-110 transition-transform duration-500"
                       />
                     </Link>
 
                     {/* Badges */}
-                    <div className="absolute top-3 left-3 flex flex-col gap-2">
+                    {/* <div className="absolute top-3 left-3 flex flex-col gap-2">
                       {product.isNew && <Badge className="bg-green-500 hover:bg-green-600">New</Badge>}
                       {product.isSale && <Badge className="bg-red-500 hover:bg-red-600">Sale</Badge>}
-                    </div>
+                    </div> */}
 
                     {/* Action Buttons */}
                     <div
@@ -353,15 +281,20 @@ export default function ProductsPage() {
                       <Button
                         size="icon"
                         variant="secondary"
-                        className="h-8 w-8 rounded-full bg-white/90 hover:bg-white"
+                        className="h-8 w-8 rounded-full bg-white/90 hover:bg-white relative"
                         onClick={() => handleAddToCart(product)}
                       >
                         <ShoppingCart className="h-4 w-4 text-gray-600" />
+                        {isInCart(product.id) && (
+                          <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white">
+                            1
+                          </span>
+                        )}
                       </Button>
                     </div>
 
                     {/* Quick Add to Cart */}
-                    <div
+                    {/* <div
                       className={`absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent transition-all duration-300 ${
                         hoveredProduct === product.id ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
                       }`}
@@ -372,7 +305,7 @@ export default function ProductsPage() {
                       >
                         Quick Add to Cart
                       </Button>
-                    </div>
+                    </div> */}
                   </div>
 
                   <div className="p-4">
@@ -382,25 +315,25 @@ export default function ProductsPage() {
                       </h3>
                     </Link>
 
-                    <div className="flex items-center gap-1 mb-2">
+                    {/* <div className="flex items-center gap-1 mb-2">
                       <div className="flex items-center">
                         {[...Array(5)].map((_, i) => (
                           <Star
                             key={i}
                             className={`h-4 w-4 ${
-                              i < Math.floor(product.rating) ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
+                              i < Math.floor(product.average_rating) ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
                             }`}
                           />
                         ))}
                       </div>
-                      <span className="text-sm text-gray-500">({product.reviews})</span>
-                    </div>
+                      <span className="text-sm text-gray-500">({product.reviews.length} reviews)</span>
+                    </div> */}
 
                     <div className="flex items-center gap-2">
-                      <span className="text-xl font-bold text-gray-900">${product.price}</span>
-                      {product.originalPrice && (
-                        <span className="text-sm text-gray-500 line-through">${product.originalPrice}</span>
-                      )}
+                      <span className="text-xl font-bold text-gray-900">₹{product.price}</span>
+                      {/* {product.originalPrice && (
+                        <span className="text-sm text-gray-500 line-through">₹{product.originalPrice}</span>
+                      )} */}
                     </div>
                   </div>
                 </CardContent>
@@ -415,10 +348,10 @@ export default function ProductsPage() {
                 variant="outline"
                 className="mt-4"
                 onClick={() => {
-                  setSelectedCategories([])
+                  // setSelectedCategories([])
                   setSelectedColors([])
                   setSelectedSizes([])
-                  setPriceRange([0, 100])
+                  setPriceRange([0, 1000])
                 }}
               >
                 Clear Filters

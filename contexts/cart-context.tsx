@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useState, type ReactNode } from "react"
+import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 
 interface CartItem {
   id: number
@@ -10,10 +10,12 @@ interface CartItem {
   quantity: number
   size: string
   color: string
+  stock: number
 }
 
 interface CartContextType {
   items: CartItem[]
+  isInCart: (id: number) => boolean
   addItem: (item: CartItem) => void
   removeItem: (id: number) => void
   updateQuantity: (id: number, quantity: number) => void
@@ -26,7 +28,17 @@ const CartContext = createContext<CartContextType | undefined>(undefined)
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])
 
+  useEffect(()=>{
+    const storedItems = localStorage.getItem("cart")
+    if (storedItems) {
+      setItems(JSON.parse(storedItems))
+    }
+  }, [])
+
   const addItem = (newItem: CartItem) => {
+    let cart = JSON.parse(localStorage.getItem('cart') || '[]')
+    cart.push(newItem)
+    localStorage.setItem('cart', JSON.stringify(cart))
     setItems((prev) => {
       const existingItem = prev.find(
         (item) => item.id === newItem.id && item.size === newItem.size && item.color === newItem.color,
@@ -44,7 +56,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
     })
   }
 
+  const isInCart = (id: number) => {
+    return items.some((item) => item.id === id)
+  }
+
   const removeItem = (id: number) => {
+    let cart = JSON.parse(localStorage.getItem('cart') || '[]')
+    cart = cart.filter((item: any) => item.id !== id);
+    localStorage.setItem('cart', JSON.stringify(cart))
     setItems((prev) => prev.filter((item) => item.id !== id))
   }
 
@@ -54,10 +73,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
       return
     }
 
+    let cart = JSON.parse(localStorage.getItem('cart') || '[]')
+    cart = cart.map((item: any) => item.id == id ? { ...item, quantity } : item)
+    localStorage.setItem('cart', JSON.stringify(cart));
     setItems((prev) => prev.map((item) => (item.id === id ? { ...item, quantity } : item)))
   }
 
   const clearCart = () => {
+    localStorage.setItem('cart', JSON.stringify([]))
     setItems([])
   }
 
@@ -68,6 +91,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       value={{
         items,
         addItem,
+        isInCart,
         removeItem,
         updateQuantity,
         clearCart,
