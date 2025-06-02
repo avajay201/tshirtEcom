@@ -1,18 +1,17 @@
 "use client"
 
-import { createContext, useContext, useState, type ReactNode } from "react"
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
 
 interface User {
-  id: number
   name: string
   email: string
+  access_token: string
 }
 
 interface AuthContextType {
-  user: User | null
-  login: (email: string, password: string) => Promise<boolean>
-  register: (name: string, email: string, password: string) => Promise<boolean>
-  logout: () => void
+  user: User | null,
+  logout: () => void,
+  loggedIn: (name: string, email: string, access_token: string) => void,
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -20,51 +19,31 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
 
-  const login = async (email: string, password: string): Promise<boolean> => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    // Mock successful login
-    if (email && password) {
-      setUser({
-        id: 1,
-        name: "John Doe",
-        email: email,
-      })
-      return true
+  useEffect(() => {
+    const name = localStorage.getItem('name')
+    const email = localStorage.getItem('email')
+    const access_token = localStorage.getItem('access_token')
+    if (name && email && access_token) {
+      setUser({ name, email, access_token })
     }
-    return false
-  }
-
-  const register = async (name: string, email: string, password: string): Promise<boolean> => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    // Mock successful registration
-    if (name && email && password) {
-      setUser({
-        id: 1,
-        name: name,
-        email: email,
-      })
-      return true
-    }
-    return false
-  }
+  }, [])
 
   const logout = () => {
+    localStorage.removeItem('name')
+    localStorage.removeItem('email')
+    localStorage.removeItem('access_token')
     setUser(null)
   }
 
+  const loggedIn = (name: string, email: string, access_token: string) => {
+    localStorage.setItem('name', name)
+    localStorage.setItem('email', email)
+    localStorage.setItem('access_token', access_token)
+    setUser({ name, email, access_token })
+  }
+
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        login,
-        register,
-        logout,
-      }}
-    >
+    <AuthContext.Provider value={{ user, logout, loggedIn }}>
       {children}
     </AuthContext.Provider>
   )

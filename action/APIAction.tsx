@@ -2,6 +2,15 @@ import axios from 'axios';
 import { ENDPOINTS } from './API';
 
 
+const authToken = ()=>{
+  const isLocal = !localStorage.getItem('name') && !localStorage.getItem('email') && !localStorage.getItem('access_token');
+  if (isLocal){
+    return ''
+  }
+
+  return localStorage.getItem('access_token')
+}
+
 export const listBanners = async () => {
   try {
     const response = await axios.get(ENDPOINTS.list_banners, {
@@ -15,9 +24,9 @@ export const listBanners = async () => {
   }
 };
 
-export const listProducts = async () => {
+export const listProducts = async (url:string) => {
   try {
-    const response = await axios.get(ENDPOINTS.list_product_details, {
+    const response = await axios.get(url ? url : ENDPOINTS.list_product_details, {
       headers: {
         'Content-Type': 'application/json'
       }
@@ -51,5 +60,93 @@ export const listProductDetails = async (id: number, query: string) => {
     return response.data;
   } catch (e) {
     console.log("Banner fetching error:", e);
+  }
+};
+
+export const registerUser = async (data: object) => {
+  try {
+    const response = await axios.post(ENDPOINTS.register_user, data);
+    return [response.status, response.data];
+  } catch (e) {
+    console.log("Banner fetching error:", e);
+    if (e.response) {
+      return [e.response.status, e.response.data.error];
+    }
+    return [500, { detail: "An unexpected error occurred." }];
+  }
+};
+
+export const loginUser = async (data: object) => {
+  try {
+    const response = await axios.post(ENDPOINTS.login_user, data);
+    return [response.status, response.data];
+  } catch (e) {
+    console.log("Banner fetching error:", e);
+    if (e.response) {
+      return [e.response.status, e.response.data.error];
+    }
+    return [500, { detail: "An unexpected error occurred." }];
+  }
+};
+
+export const cartItems = async () => {
+  try {
+    const token = authToken();
+    const response = await axios.get(ENDPOINTS.user_cart, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (e) {
+    console.log("Banner fetching error:", e);
+  }
+};
+
+export const cartItemAdd = async (data: object) => {
+  try {
+    const token = authToken();
+    const response = await axios.post(ENDPOINTS.user_cart, data, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (e) {
+    console.log("Banner fetching error:", e);
+
+  }
+};
+
+export const cartItemUpdate = async (data: object) => {
+  try {
+    const token = authToken();
+    const response = await axios.patch(ENDPOINTS.user_cart, data, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (e) {
+    console.log("Banner fetching error:", e);
+  }
+};
+
+export const cartItemRemove = async (data: object) => {
+  try {
+    const token = authToken();
+    const response = await axios.delete(ENDPOINTS.user_cart, {
+      data,
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return [response.status, response.data];
+  } catch (e) {
+    console.log("Banner fetching error:", e);
+    if (e.response) {
+      return [e.response.status, e.response.data.error];
+    }
+    return [500, { detail: "An unexpected error occurred." }];
   }
 };

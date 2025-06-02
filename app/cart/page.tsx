@@ -40,23 +40,27 @@ export default function CartPage() {
             <Card key={`${item.id}-${item.size}-${item.color}`}>
               <CardContent className="p-6">
                 <div className="flex items-center gap-4">
-                  <div className="relative w-20 h-20 rounded-lg overflow-hidden bg-gray-100">
-                    <Image src={item.image || "/placeholder.svg"} alt={item.name} fill className="object-contain" />
-                  </div>
+                  <Link href={`/products/${item.product}/?color=${item.color}&size=${item.size}`}>
+                    <div className="relative w-20 h-20 rounded-lg overflow-hidden bg-gray-100">
+                      <Image src={item.image || "/placeholder.svg"} alt={item.name} fill className="object-contain" />
+                    </div>
+                  </Link>
 
                   <div className="flex-1">
-                    <h3 className="font-semibold text-lg">{item.name}</h3>
-                    <p className="text-gray-600">
-                      Size: {item.size} | Color: {item.color}
-                    </p>
-                    <p className="text-lg font-bold text-purple-600">₹{item.price}</p>
+                    <Link href={`/products/${item.product}/?color=${item.color}&size=${item.size}`}>
+                      <h3 className="font-semibold text-lg">{item.name}</h3>
+                      <p className="text-gray-600">
+                        Size: {item.size} | Color: {item.color}
+                      </p>
+                      <p className="text-lg font-bold text-purple-600">₹{(item.quantity * item.price).toFixed(2)}</p>
+                    </Link>
                   </div>
 
                   <div className="flex items-center gap-3">
                     <Button
                       variant="outline"
                       size="icon"
-                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                      onClick={() => item.quantity > 1 && updateQuantity(item.id, item.quantity - 1)}
                       disabled={item.quantity <= 1}
                     >
                       <Minus className="h-4 w-4" />
@@ -75,7 +79,7 @@ export default function CartPage() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => removeItem(item.id)}
+                    onClick={() => removeItem(item.variant)}
                     className="text-red-500 hover:text-red-700 hover:bg-red-50"
                   >
                     <Trash2 className="h-4 w-4" />

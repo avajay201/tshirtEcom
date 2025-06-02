@@ -13,6 +13,7 @@ import { Eye, EyeOff, Mail, Lock, User } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 // CHANGED: Added Google OAuth imports
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google"
+import { registerUser } from "@/action/APIAction"
 // END CHANGED
 
 export default function RegisterPage() {
@@ -24,13 +25,20 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+  const [success, setSuccess] = useState("")
   const { register } = useAuth()
   const router = useRouter()
+
+  const [nameError, setNameError] = useState("")
+  const [emailError, setEmailError] = useState("")
+  const [passwordError, setPasswordError] = useState("")
+  const [confirmPasswordError, setConfirmPasswordError] = useState("")
 
   // CHANGED: Added Google login handler
   const handleGoogleLogin = async (credentialResponse: any) => {
     setIsLoading(true)
     setError("")
+    setSuccess("")
     try {
       const jwt = credentialResponse.credential
       // Assuming useAuth has a method for Google login; adjust as needed
@@ -52,24 +60,65 @@ export default function RegisterPage() {
     e.preventDefault()
     setIsLoading(true)
     setError("")
+    setSuccess("")
 
-    if (password !== confirmPassword) {
-      setError("Passwords do not match")
+    setNameError("")
+    setEmailError("")
+    setPasswordError("")
+    setConfirmPasswordError("")
+
+    let valid = true
+
+    if (name.trim() === "") {
+      setNameError("Full name is required")
+      valid = false
+    }
+
+    if (email.trim() === "") {
+      setEmailError("Email is required")
+      valid = false
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      setEmailError("Please enter a valid email")
+      valid = false
+    }
+
+    if (password.trim() === "") {
+      setPasswordError("Password is required")
+      valid = false
+    } else if (password.length < 6) {
+      setPasswordError("Password must be at least 6 characters")
+      valid = false
+    }
+
+    if (confirmPassword.trim() === "") {
+      setConfirmPasswordError("Please confirm your password")
+      valid = false
+    } else if (password !== confirmPassword) {
+      setConfirmPasswordError("Passwords do not match")
+      valid = false
+    }
+
+    if (!valid) {
       setIsLoading(false)
       return
     }
 
-    try {
-      const success = await register(name, email, password)
-      if (success) {
-        router.push("/")
-      } else {
-        setError("Registration failed. Please try again.")
-      }
-    } catch (err) {
-      setError("Something went wrong. Please try again.")
-    } finally {
-      setIsLoading(false)
+    const result = await registerUser({
+      full_name: name,
+      email: email,
+      password: password,
+    })
+    setIsLoading(false)
+
+    if (result[0] === 201){
+      setName("")
+      setEmail("")
+      setPassword("")
+      setConfirmPassword("")
+      setSuccess('A verification link has been sent to your email. Please verify your account to continue.')
+    }
+    else{
+      setError(result[1])
     }
   }
 
@@ -94,9 +143,9 @@ export default function RegisterPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="pl-10"
-                  required
                 />
               </div>
+              {nameError && <div className="text-red-500 text-sm">{nameError}</div>}
             </div>
 
             <div className="space-y-2">
@@ -110,9 +159,9 @@ export default function RegisterPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-10"
-                  required
                 />
               </div>
+              {emailError && <div className="text-red-500 text-sm">{emailError}</div>}
             </div>
 
             <div className="space-y-2">
@@ -126,7 +175,6 @@ export default function RegisterPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="pl-10 pr-10"
-                  required
                 />
                 <button
                   type="button"
@@ -136,6 +184,7 @@ export default function RegisterPage() {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
+              {passwordError && <div className="text-red-500 text-sm">{passwordError}</div>}
             </div>
 
             <div className="space-y-2">
@@ -149,7 +198,6 @@ export default function RegisterPage() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="pl-10 pr-10"
-                  required
                 />
                 <button
                   type="button"
@@ -159,9 +207,11 @@ export default function RegisterPage() {
                   {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
+              {confirmPasswordError && <div className="text-red-500 text-sm">{confirmPasswordError}</div>}
             </div>
 
             {error && <div className="text-red-500 text-sm text-center">{error}</div>}
+            {success && <div className="text-green-500 text-sm text-center">{success}</div>}
 
             <Button
               type="submit"

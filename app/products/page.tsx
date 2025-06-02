@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
-import { Heart, ShoppingCart, Star, Filter } from "lucide-react"
+import { Heart, ShoppingCart, Filter } from "lucide-react"
 import { useCart } from "@/contexts/cart-context"
 import { useWishlist } from "@/contexts/wishlist-context"
 import { listProducts } from "@/action/APIAction"
@@ -28,17 +28,27 @@ export default function ProductsPage() {
   const [sortBy, setSortBy] = useState("featured")
   const [hoveredProduct, setHoveredProduct] = useState<number | null>(null)
   const [products, setProducts] = useState([]);
+  const [isNext, setIsNext] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
 
   const { addItem, isInCart, removeItem: removeFromCart } = useCart()
   const { addItem: addToWishlist, removeItem: removeFromWishlist, isInWishlist } = useWishlist()
 
   const fetchProducts = async () => {
-    const result = await listProducts();
+    setIsLoading(true);
+    const result = await listProducts(isNext);
+    setIsLoading(false);
     if (result) {
       console.log('Fetched products:', result.results);
-      setProducts(result.results);
+      setProducts(prevProducts => [...prevProducts, ...result.results]);
+      if (result.next){
+        setIsNext(result.next);
+      }
+      else{
+        setIsNext('');
+      }
     } else {
-      console.error("Failed to fetch products");
+      console.log("Failed to fetch products");
     }
   };
 
@@ -47,7 +57,6 @@ export default function ProductsPage() {
   }, []);
 
   const filteredProducts = useMemo(() => {
-    console.log('products>>', products)
     return products
       .filter((product) => {
         if (selectedColors.length > 0 && !product.colors.some((color) => selectedColors.includes(color.name.toLowerCase()))) return false
@@ -61,10 +70,6 @@ export default function ProductsPage() {
             return a.price - b.price
           case "price-high":
             return b.price - a.price
-          // case "newest":
-          //   return b.isNew ? 1 : -1
-          // case "rating":
-          //   return b.average_rating - a.average_rating
           default:
             return 0
         }
@@ -98,12 +103,14 @@ export default function ProductsPage() {
   }
 
   const handleAddToCart = (product: any) => {
-    if (isInCart(product.id)) {
-      removeFromCart(product.id)
+    if (isInCart(product.variant)) {
+      removeFromCart(product.variant)
     }
     else{
       addItem({
-        id: product.id,
+        id: 0,
+        variant: product.variant,
+        product: product.id,
         name: product.name,
         price: product.price,
         image: product.images[0].image,
@@ -127,6 +134,10 @@ export default function ProductsPage() {
       })
     }
   }
+
+  const generateRandomString = () => {
+    return Math.random().toString(36).substring(2, 10);
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -237,7 +248,7 @@ export default function ProductsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredProducts.map((product) => (
               <Card
-                key={product.id}
+                key={product.id + generateRandomString()}
                 className="group cursor-pointer overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
                 onMouseEnter={() => setHoveredProduct(product.id)}
                 onMouseLeave={() => setHoveredProduct(null)}
@@ -285,7 +296,7 @@ export default function ProductsPage() {
                         onClick={() => handleAddToCart(product)}
                       >
                         <ShoppingCart className="h-4 w-4 text-gray-600" />
-                        {isInCart(product.id) && (
+                        {isInCart(product.variant) && (
                           <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white">
                             1
                           </span>
@@ -341,7 +352,18 @@ export default function ProductsPage() {
             ))}
           </div>
 
-          {filteredProducts.length === 0 && (
+          {isLoading && <div className="flex justify-center items-center my-4">
+            <div className="w-16 h-16 border-t-4 border-purple-500 border-solid rounded-full animate-spin"></div>
+          </div>
+          }
+
+          {isNext && filteredProducts.length > 0 && <div className="text-center mt-12">
+            <Button size="lg" onClick={fetchProducts} variant="outline" className="hover:bg-purple-50 hover:border-purple-300">
+              View More
+            </Button>
+          </div>}
+
+          {filteredProducts.length === 0 && !isLoading && (
             <div className="text-center py-12">
               <p className="text-gray-500 text-lg">No products found matching your filters.</p>
               <Button

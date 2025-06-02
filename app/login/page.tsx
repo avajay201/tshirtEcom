@@ -13,6 +13,7 @@ import { Separator } from "@/components/ui/separator"
 import { Eye, EyeOff, Mail, Lock } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google"
+import { loginUser } from "@/action/APIAction"
 
 
 export default function LoginPage() {
@@ -21,11 +22,13 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
-  const { login } = useAuth()
+  const { loggedIn } = useAuth()
   const router = useRouter()
 
+  const [emailError, setEmailError] = useState("")
+  const [passwordError, setPasswordError] = useState("")
 
-  // CHANGED: Added Google login handler
+
 const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""
 if (!clientId && process.env.NODE_ENV !== "production") {
   console.warn("NEXT_PUBLIC_GOOGLE_CLIENT_ID is not set. Google login will not work.")
@@ -36,8 +39,7 @@ const handleGoogleLogin = async (credentialResponse: any) => {
   setError("")
   try {
     const jwt = credentialResponse.credential
-    // Assuming useAuth has a login method that supports Google JWT
-    const success = await login("", "", jwt) // Pass JWT; adjust based on useAuth
+    const success = await login("", "", jwt)
     if (success) {
       router.push("/")
     } else {
@@ -49,7 +51,6 @@ const handleGoogleLogin = async (credentialResponse: any) => {
     setIsLoading(false)
   }
 }
-// END CHANGED
 
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -57,17 +58,43 @@ const handleGoogleLogin = async (credentialResponse: any) => {
     setIsLoading(true)
     setError("")
 
-    try {
-      const success = await login(email, password)
-      if (success) {
-        router.push("/")
-      } else {
-        setError("Invalid email or password")
-      }
-    } catch (err) {
-      setError("Something went wrong. Please try again.")
-    } finally {
+    setEmailError("")
+    setPasswordError("")
+
+    let valid = true
+
+    if (email.trim() === "") {
+      setEmailError("Email is required")
+      valid = false
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      setEmailError("Please enter a valid email")
+      valid = false
+    }
+
+    if (password.trim() === "") {
+      setPasswordError("Password is required")
+      valid = false
+    }
+
+    if (!valid) {
       setIsLoading(false)
+      return
+    }
+
+    const result = await loginUser({
+      email: email,
+      password: password,
+    })
+    setIsLoading(false)
+
+    if (result[0] === 200){
+      setEmail("")
+      setPassword("")
+      loggedIn(result[1].name, result[1].email, result[1].access)
+      router.push("/")
+    }
+    else{
+      setError(result[1])
     }
   }
 
@@ -92,9 +119,9 @@ const handleGoogleLogin = async (credentialResponse: any) => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-10"
-                  required
                 />
               </div>
+              {emailError && <div className="text-red-500 text-sm">{emailError}</div>}
             </div>
 
             <div className="space-y-2">
@@ -108,7 +135,6 @@ const handleGoogleLogin = async (credentialResponse: any) => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="pl-10 pr-10"
-                  required
                 />
                 <button
                   type="button"
@@ -118,6 +144,7 @@ const handleGoogleLogin = async (credentialResponse: any) => {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
+              {passwordError && <div className="text-red-500 text-sm">{passwordError}</div>}
             </div>
 
             {error && <div className="text-red-500 text-sm text-center">{error}</div>}
