@@ -1,9 +1,13 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
+import { cartItemAdd, cartItemRemove, cartItems, cartItemUpdate } from "@/action/APIAction"
+
 
 interface CartItem {
   id: number
+  variant: number
+  product: number
   name: string
   price: number
   image: string
@@ -26,62 +30,107 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined)
 
 export function CartProvider({ children }: { children: ReactNode }) {
+  const [isLoading, setIsLoading] = useState(false);
   const [items, setItems] = useState<CartItem[]>([])
 
+  const fetchCartItems = async()=>{
+    setIsLoading(true);
+    const result = await cartItems();
+    if (result){
+      setItems(result)
+    }
+    setIsLoading(false);
+  }
+
   useEffect(()=>{
-    const storedItems = localStorage.getItem("cart")
-    if (storedItems) {
-      setItems(JSON.parse(storedItems))
+    const isLocal = !localStorage.getItem('name') && !localStorage.getItem('email') && !localStorage.getItem('access_token');
+    if (isLocal){
+      const storedItems = localStorage.getItem("cart")
+      if (storedItems) {
+        setItems(JSON.parse(storedItems))
+      }
+    }
+    else{
+      fetchCartItems();
     }
   }, [])
 
-  const addItem = (newItem: CartItem) => {
-    let cart = JSON.parse(localStorage.getItem('cart') || '[]')
-    cart.push(newItem)
-    localStorage.setItem('cart', JSON.stringify(cart))
-    setItems((prev) => {
-      const existingItem = prev.find(
-        (item) => item.id === newItem.id && item.size === newItem.size && item.color === newItem.color,
-      )
-
-      if (existingItem) {
-        return prev.map((item) =>
-          item.id === existingItem.id && item.size === existingItem.size && item.color === existingItem.color
-            ? { ...item, quantity: item.quantity + newItem.quantity }
-            : item,
-        )
+  const addItem = async (newItem: CartItem) => {
+    const isLocal = !localStorage.getItem('name') && !localStorage.getItem('email') && !localStorage.getItem('access_token');
+    if (isLocal){
+      let cart = JSON.parse(localStorage.getItem('cart') || '[]')
+      newItem.id = items.length + 1
+      cart.push(newItem)
+      localStorage.setItem('cart', JSON.stringify(cart))
+      setItems((prev) => {
+        return [...prev, newItem]
+      })
+    }
+    else{
+      const result = await cartItemAdd({variant_id: newItem.variant, quantity: newItem.quantity});
+      if (result){
+        setItems((prev) => {
+        return [...prev, result]
+      })
       }
-
-      return [...prev, newItem]
-    })
+    }
   }
 
   const isInCart = (id: number) => {
-    return items.some((item) => item.id === id)
+    return items.some((item) => item.variant === id)
   }
 
-  const removeItem = (id: number) => {
-    let cart = JSON.parse(localStorage.getItem('cart') || '[]')
-    cart = cart.filter((item: any) => item.id !== id);
-    localStorage.setItem('cart', JSON.stringify(cart))
-    setItems((prev) => prev.filter((item) => item.id !== id))
-  }
-
-  const updateQuantity = (id: number, quantity: number) => {
-    if (quantity <= 0) {
-      removeItem(id)
-      return
+  const removeItem = async (id: number) => {
+    setIsLoading(true);
+    const isLocal = !localStorage.getItem('name') && !localStorage.getItem('email') && !localStorage.getItem('access_token');
+    if (isLocal){
+      let cart = JSON.parse(localStorage.getItem('cart') || '[]')
+      cart = cart.filter((item: any) => item.variant !== id);
+      localStorage.setItem('cart', JSON.stringify(cart))
+      setItems((prev) => prev.filter((item) => item.variant !== id))
     }
-
-    let cart = JSON.parse(localStorage.getItem('cart') || '[]')
-    cart = cart.map((item: any) => item.id == id ? { ...item, quantity } : item)
-    localStorage.setItem('cart', JSON.stringify(cart));
-    setItems((prev) => prev.map((item) => (item.id === id ? { ...item, quantity } : item)))
+    else{
+      const removeToItem = items.filter(item => item.variant === id)
+      const result = await cartItemRemove({item_id: removeToItem[0].id});
+      if (result){
+        setItems((prev) => prev.filter((item) => item.variant !== id))
+      }
+    }
+    setIsLoading(false);
   }
 
-  const clearCart = () => {
-    localStorage.setItem('cart', JSON.stringify([]))
-    setItems([])
+  const updateQuantity = async(id: number, quantity: number) => {
+    setIsLoading(true);
+    const isLocal = !localStorage.getItem('name') && !localStorage.getItem('email') && !localStorage.getItem('access_token');
+    if (isLocal){
+      let cart = JSON.parse(localStorage.getItem('cart') || '[]')
+      cart = cart.map((item: any) => item.id == id ? { ...item, quantity } : item)
+      localStorage.setItem('cart', JSON.stringify(cart));
+      setItems((prev) => prev.map((item) => (item.id === id ? { ...item, quantity } : item)))
+    }
+    else{
+      const result = await cartItemUpdate({item_id: id, quantity: quantity});
+      if (result){
+        setItems((prev) => prev.map((item) => (item.id === id ? { ...item, quantity } : item)))
+      }
+    }
+    setIsLoading(false);
+  }
+
+  const clearCart = async() => {
+    setIsLoading(true);
+    const isLocal = !localStorage.getItem('name') && !localStorage.getItem('email') && !localStorage.getItem('access_token');
+    if (isLocal){
+      localStorage.setItem('cart', JSON.stringify([]))
+      setItems([])
+    }
+    else{
+      const result = await cartItemRemove({item_id: 0});
+      if (result){
+        setItems([])
+      }
+    }
+    setIsLoading(false);
   }
 
   const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0)

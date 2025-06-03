@@ -5,56 +5,12 @@ import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Heart, ShoppingCart, Star } from "lucide-react"
+// import { Badge } from "@/components/ui/badge"
+import { Heart, ShoppingCart } from "lucide-react"
 import { useCart } from "@/contexts/cart-context"
 import { useWishlist } from "@/contexts/wishlist-context"
 import { listHomeProducts } from "@/action/APIAction"
 
-// const featuredProducts = [
-//   {
-//     id: 1,
-//     name: "Classic White Tee",
-//     price: 29.99,
-//     originalPrice: 39.99,
-//     image: "/placeholder.svg?height=400&width=400",
-//     rating: 4.8,
-//     reviews: 124,
-//     isNew: false,
-//     isSale: true,
-//   },
-//   {
-//     id: 2,
-//     name: "Vintage Graphic Tee",
-//     price: 34.99,
-//     image: "/placeholder.svg?height=400&width=400",
-//     rating: 4.9,
-//     reviews: 89,
-//     isNew: true,
-//     isSale: false,
-//   },
-//   {
-//     id: 3,
-//     name: "Premium Cotton Blend",
-//     price: 42.99,
-//     image: "/placeholder.svg?height=400&width=400",
-//     rating: 4.7,
-//     reviews: 156,
-//     isNew: false,
-//     isSale: false,
-//   },
-//   {
-//     id: 4,
-//     name: "Minimalist Design Tee",
-//     price: 27.99,
-//     originalPrice: 35.99,
-//     image: "/placeholder.svg?height=400&width=400",
-//     rating: 4.6,
-//     reviews: 98,
-//     isNew: false,
-//     isSale: true,
-//   },
-// ]
 
 export function FeaturedProducts() {
   const { addItem, isInCart, removeItem: removeFromCart } = useCart()
@@ -62,9 +18,12 @@ export function FeaturedProducts() {
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const { addItem: addToWishlist, removeItem: removeFromWishlist, isInWishlist } = useWishlist()
   const [hoveredProduct, setHoveredProduct] = useState<number | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   const fetchProducts = async () => {
+    setIsLoading(true);
     const result = await listHomeProducts();
+    setIsLoading(false);
     if (result) {
       setFeaturedProducts(result.featured_products || []);
       setRecommendedProducts(result.recommended_products || []);
@@ -76,12 +35,14 @@ export function FeaturedProducts() {
   }, []);
 
   const handleAddToCart = (product: any) => {
-    if (isInCart(product.id)) {
-      removeFromCart(product.id)
+    if (isInCart(product.variant)) {
+      removeFromCart(product.variant)
     }
     else{
       addItem({
-        id: product.id,
+        id: 0,
+        variant: product.variant,
+        product: product.id,
         name: product.name,
         price: product.price,
         image: product.images[0].image,
@@ -107,6 +68,10 @@ export function FeaturedProducts() {
     }
   }
 
+  const generateRandomString = () => {
+    return Math.random().toString(36).substring(2, 10);
+  };
+
   return (
     <>
       <section className="container mx-auto px-4 py-6 md:py-12" style={{ marginTop: '2px' }}>
@@ -115,12 +80,16 @@ export function FeaturedProducts() {
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">Handpicked favorites that our customers love most</p>
         </div>
 
+        {isLoading && <div className="flex justify-center items-center my-4">
+          <div className="w-16 h-16 border-t-4 border-purple-500 border-solid rounded-full animate-spin"></div>
+        </div>
+        }
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {recommendedProducts.map((product) => (
             <Card
-              key={product.id}
+              key={product.id + '-' + generateRandomString()}
               className="group cursor-pointer overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-              onMouseEnter={() => setHoveredProduct(product.id)}
+              onMouseEnter={() => setHoveredProduct(product.variant)}
               onMouseLeave={() => setHoveredProduct(null)}
             >
               <CardContent className="p-0">
@@ -143,7 +112,7 @@ export function FeaturedProducts() {
 
                   {/* Action Buttons */}
                   <div
-                    className={`absolute top-3 right-3 flex flex-col gap-2 transition-all duration-300 ${hoveredProduct === product.id ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4"
+                    className={`absolute top-3 right-3 flex flex-col gap-2 transition-all duration-300 ${hoveredProduct === product.variant ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4"
                       }`}
                   >
                     <Button
@@ -163,7 +132,7 @@ export function FeaturedProducts() {
                       onClick={() => handleAddToCart(product)}
                     >
                       <ShoppingCart className="h-4 w-4 text-gray-600" />
-                      {isInCart(product.id) && (
+                      {isInCart(product.variant) && (
                         <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white">
                           1
                         </span>
@@ -233,12 +202,16 @@ export function FeaturedProducts() {
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">Handpicked favorites that our customers love most</p>
         </div>
 
+        {isLoading && <div className="flex justify-center items-center my-4">
+          <div className="w-16 h-16 border-t-4 border-purple-500 border-solid rounded-full animate-spin"></div>
+        </div>
+        }
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {featuredProducts.map((product) => (
             <Card
-              key={product.id}
+              key={product.id + '-' + generateRandomString()}
               className="group cursor-pointer overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-              onMouseEnter={() => setHoveredProduct(product.id)}
+              onMouseEnter={() => setHoveredProduct(product.variant)}
               onMouseLeave={() => setHoveredProduct(null)}
             >
               <CardContent className="p-0">
@@ -261,7 +234,7 @@ export function FeaturedProducts() {
 
                   {/* Action Buttons */}
                   <div
-                    className={`absolute top-3 right-3 flex flex-col gap-2 transition-all duration-300 ${hoveredProduct === product.id ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4"
+                    className={`absolute top-3 right-3 flex flex-col gap-2 transition-all duration-300 ${hoveredProduct === product.variant ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4"
                       }`}
                   >
                     <Button
@@ -277,10 +250,15 @@ export function FeaturedProducts() {
                     <Button
                       size="icon"
                       variant="secondary"
-                      className="h-8 w-8 rounded-full bg-white/90 hover:bg-white"
+                      className="h-8 w-8 rounded-full bg-white/90 hover:bg-white relative"
                       onClick={() => handleAddToCart(product)}
                     >
                       <ShoppingCart className="h-4 w-4 text-gray-600" />
+                      {isInCart(product.variant) && (
+                        <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white">
+                          1
+                        </span>
+                      )}
                     </Button>
                   </div>
 

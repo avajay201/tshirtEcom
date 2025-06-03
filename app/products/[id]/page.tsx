@@ -1,17 +1,19 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { use, useEffect, useState } from "react"
 import { useParams } from "next/navigation"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+// import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Heart, ShoppingCart, Star, Minus, Plus, Truck, Shield, RotateCcw } from "lucide-react"
+import { Heart, ShoppingCart, Star, Minus, Plus, Truck, Shield, RotateCcw, CreditCard, Package } from "lucide-react"
 import { useCart } from "@/contexts/cart-context"
 import { useWishlist } from "@/contexts/wishlist-context"
 import { listProductDetails } from "@/action/APIAction"
+import { useAuth } from "@/contexts/auth-context"
+import Link from "next/link"
 
 
 export default function ProductDetailPage() {
@@ -23,6 +25,8 @@ export default function ProductDetailPage() {
   const [product, setProduct] = useState({})
   const [reviews, setReviews] = useState([])
   const [varaintExists, setVariantExists] = useState(true)
+  const [isBuy, setIsBuy] = useState(false);
+  const { user } = useAuth()
 
   const { addItem, removeItem: removeFromCart, isInCart } = useCart()
   const { addItem: addToWishlist, removeItem: removeFromWishlist, isInWishlist } = useWishlist()
@@ -56,11 +60,12 @@ export default function ProductDetailPage() {
       return
     }
 
-    if (isInCart(product.id)) {
-      removeFromCart(product.id)
+    if (isInCart(product.variant)) {
+      removeFromCart(product.variant)
     } else {
       addItem({
-        id: product.id,
+        id: 0,
+        variant: product.variant,
         name: product.name,
         price: product.price,
         image: product.images[0].image,
@@ -103,6 +108,32 @@ export default function ProductDetailPage() {
     }
   }
 
+  const handleBuyNow = ()=>{
+    if (!user){
+      setIsBuy(true);
+      return;
+    }
+  }
+  console.log(user, isBuy)
+
+  if (!user && isBuy) {
+    return (
+      <div className="container mx-auto px-4 py-16 text-center">
+        <Package className="h-24 w-24 mx-auto mb-6 text-gray-300" />
+        <h1 className="text-3xl font-bold text-gray-900 mb-4">Please sign in</h1>
+        <p className="text-gray-600 mb-8">You need to be signed in to buy a product.</p>
+        <Link href="/login">
+          <Button
+            size="lg"
+            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+          >
+            Sign In
+          </Button>
+        </Link>
+      </div>
+    )
+  }
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
@@ -111,7 +142,7 @@ export default function ProductDetailPage() {
           <div className="aspect-square overflow-hidden rounded-lg bg-gray-100">
             <Image
               src={product.images && product.images[selectedImage].image || "/placeholder.svg"}
-              alt={product.name}
+              alt={product.name || 'Product Image'}
               width={600}
               height={600}
               className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
@@ -243,13 +274,22 @@ export default function ProductDetailPage() {
           {/* Action Buttons */}
           <div className="space-y-3">
             <Button
+              onClick={() => varaintExists && handleBuyNow()}
+              className="w-full bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600"
+              size="lg"
+              disabled={!varaintExists}
+            >
+              <CreditCard className="w-5 h-5 mr-2" />
+              Buy Now
+            </Button>
+            <Button
               onClick={()=> varaintExists && handleAddToCart()}
               className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
               size="lg"
               disabled={!varaintExists}
             >
               <ShoppingCart className="w-5 h-5 mr-2" />
-              {isInCart(product.id) ? "Remove from Cart" : "Add to Cart"}
+              {isInCart(product.variant) ? "Remove from Cart" : "Add to Cart"}
             </Button>
             <Button variant="outline" disabled={!varaintExists} onClick={()=> varaintExists && handleWishlistToggle()} className="w-full" size="lg">
               <Heart className={`w-5 h-5 mr-2 ${isInWishlist(product.id) ? "fill-red-500 text-red-500" : ""}`} />
