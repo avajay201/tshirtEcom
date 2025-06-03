@@ -29,7 +29,7 @@ export interface BadgeProps
 
 function Badge({ className, variant, ...props }: BadgeProps) {
   return (
-    <div className={cn(badgeVariants({ variant }), className)} {...props} style={{ fontSize:'8px' }}/>
+    <div className={cn(badgeVariants({ variant }), className)} {...props} style={{ fontSize:'8px', background: "#c9edc8", color: "green" }}/>
   )
 }
 

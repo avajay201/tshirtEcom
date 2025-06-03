@@ -150,3 +150,39 @@ export const cartItemRemove = async (data: object) => {
     return [500, { detail: "An unexpected error occurred." }];
   }
 };
+
+export const productReviewSubmit = async (data: object) => {
+  try {
+    const token = authToken();
+    const response = await axios.post(ENDPOINTS.product_review_submit, data, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return [response.status, response.data];
+  } catch (e) {
+    console.log("Banner fetching error:", e);
+    if (e.response) {
+      return [e.response.status, e.response.data.error];
+    }
+    return [500, { detail: "An unexpected error occurred." }];
+  }
+};
+
+export const contactSubmit = async (data: object) => {
+  try {
+    const token = authToken();
+    const response = await axios.post(ENDPOINTS.contact_submit, data, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return [response.status, response.data];
+  } catch (e) {
+    console.log("Banner fetching error:", e);
+    if (e.response) {
+      return [e.response.status, e.response.data.error];
+    }
+    return [500, { detail: "An unexpected error occurred." }];
+  }
+};

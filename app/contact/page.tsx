@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { MapPin, Phone, Mail, Clock, Send } from "lucide-react"
+import { contactSubmit } from "@/action/APIAction"
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -17,21 +18,67 @@ export default function ContactPage() {
     subject: '',
     message: ''
   })
+  const [formErrors, setFormErrors] = useState({
+    name: '',
+    email: '',
+    subject: '',
+    message: ''
+  })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [isError, setIsError] = useState("")
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setIsError("")
+    setFormErrors({
+      name: '',
+      email: '',
+      subject: '',
+      message: ''
+    })
+
+    const errors: typeof formErrors = {
+      name: '',
+      email: '',
+      subject: '',
+      message: ''
+    }
+
+    if (formData.name.trim().length < 3) {
+      errors.name = "Name must be at least 3 characters."
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(formData.email)) {
+      errors.email = "Please enter a valid email address."
+    }
+
+    if (formData.subject.trim().length < 12) {
+      errors.subject = "Subject must be at least 12 characters."
+    }
+
+    if (formData.message.trim().length < 50) {
+      errors.message = "Message must be at least 50 characters."
+    }
+
+    const hasErrors = Object.values(errors).some((msg) => msg)
+    if (hasErrors) {
+      setFormErrors(errors)
+      return
+    }
+
     setIsSubmitting(true)
-    
-    // Simulate form submission
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    setIsSubmitted(true)
+    const result = await contactSubmit(formData)
     setIsSubmitting(false)
-    setFormData({ name: '', email: '', subject: '', message: '' })
-    
-    setTimeout(() => setIsSubmitted(false), 3000)
+    if (result[0] === 201){
+      setIsSubmitted(true)
+      setFormData({ name: '', email: '', subject: '', message: '' })
+      setTimeout(() => setIsSubmitted(false), 3000)
+    }
+    else{
+      setIsError(result[1])
+    }
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -77,9 +124,9 @@ export default function ContactPage() {
                       type="text"
                       value={formData.name}
                       onChange={handleChange}
-                      required
                       className="mt-1"
                     />
+                    {formErrors.name && <p className="text-sm text-red-500 mt-1">{formErrors.name}</p>}
                   </div>
                   <div>
                     <Label htmlFor="email">Email *</Label>
@@ -89,9 +136,9 @@ export default function ContactPage() {
                       type="email"
                       value={formData.email}
                       onChange={handleChange}
-                      required
                       className="mt-1"
                     />
+                    {formErrors.email && <p className="text-sm text-red-500 mt-1">{formErrors.email}</p>}
                   </div>
                 </div>
                 <div>
@@ -102,9 +149,9 @@ export default function ContactPage() {
                     type="text"
                     value={formData.subject}
                     onChange={handleChange}
-                    required
                     className="mt-1"
                   />
+                  {formErrors.subject && <p className="text-sm text-red-500 mt-1">{formErrors.subject}</p>}
                 </div>
                 <div>
                   <Label htmlFor="message">Message *</Label>
@@ -114,9 +161,9 @@ export default function ContactPage() {
                     rows={5}
                     value={formData.message}
                     onChange={handleChange}
-                    required
                     className="mt-1"
                   />
+                  {formErrors.message && <p className="text-sm text-red-500 mt-1">{formErrors.message}</p>}
                 </div>
                 <Button
                   type="submit"
@@ -134,16 +181,16 @@ export default function ContactPage() {
         <div className="space-y-8">
           <Card>
             <CardContent className="p-6">
-              <div className="flex items-start gap-4">
+              <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                   <Phone className="w-6 h-6 text-purple-600" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-lg mb-2">Call Us</h3>
                   <p className="text-gray-600">
-                    Phone: (555) 123-4567
-                    <br />
-                    Toll Free: 1-800-TEESTYLE
+                    Phone: +91-1234567890
+                    {/* <br /> */}
+                    {/* Toll Free: 1-800-TEESTYLE */}
                   </p>
                 </div>
               </div>
@@ -152,15 +199,15 @@ export default function ContactPage() {
 
           <Card>
             <CardContent className="p-6">
-              <div className="flex items-start gap-4">
+              <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                   <Mail className="w-6 h-6 text-purple-600" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-lg mb-2">Email Us</h3>
                   <p className="text-gray-600">
-                    General: hello@teestyle.com
-                    <br />
+                    {/* General: help@teestyle.com
+                    <br /> */}
                     Support: support@teestyle.com
                   </p>
                 </div>

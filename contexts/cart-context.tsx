@@ -70,8 +70,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const result = await cartItemAdd({variant_id: newItem.variant, quantity: newItem.quantity});
       if (result){
         setItems((prev) => {
-        return [...prev, result]
-      })
+          return [...prev, result]
+        })
       }
     }
   }

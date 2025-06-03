@@ -1,23 +1,24 @@
 "use client"
 
-import { use, useEffect, useState } from "react"
-import { useParams } from "next/navigation"
+import { useEffect, useState } from "react"
+import { useParams, useSearchParams, useRouter } from "next/navigation"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-// import { Badge } from "@/components/ui/badge"
+import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Heart, ShoppingCart, Star, Minus, Plus, Truck, Shield, RotateCcw, CreditCard, Package } from "lucide-react"
 import { useCart } from "@/contexts/cart-context"
 import { useWishlist } from "@/contexts/wishlist-context"
-import { listProductDetails } from "@/action/APIAction"
+import { listProductDetails, productReviewSubmit } from "@/action/APIAction"
 import { useAuth } from "@/contexts/auth-context"
 import Link from "next/link"
 
 
 export default function ProductDetailPage() {
   const params = useParams()
+  const searchParams = useSearchParams();
   const [selectedImage, setSelectedImage] = useState(0)
   const [selectedSize, setSelectedSize] = useState("")
   const [selectedColor, setSelectedColor] = useState({})
@@ -27,23 +28,48 @@ export default function ProductDetailPage() {
   const [varaintExists, setVariantExists] = useState(true)
   const [isBuy, setIsBuy] = useState(false);
   const { user } = useAuth()
+  const [paramsApplied, setParamsApplied] = useState(false);
+  const [newReview, setNewReview] = useState({
+    rating: 1,
+    comment: ''
+  });
 
   const { addItem, removeItem: removeFromCart, isInCart } = useCart()
   const { addItem: addToWishlist, removeItem: removeFromWishlist, isInWishlist } = useWishlist()
+  const [reviewError, setReviewError] = useState("");
+  const [reviewSuccess, setReviewSuccess] = useState("");
+
+  useEffect(() => {
+    setTimeout(()=>{
+      if (paramsApplied) return;
+      const color = searchParams.get('color');
+      const size = searchParams.get('size');
+      if (color && size && Object.entries(product).length > 0){
+        const applyToColor = product.colors.filter(clr => clr.name === color);
+        if (product.sizes.includes(size) && applyToColor.length > 0){
+          setSelectedSize(size);
+          setSelectedColor(applyToColor[0]);
+          const filterQuery = `?size=${size}&color=${color}`;
+          fetchProductDetails(filterQuery);
+          setParamsApplied(true)
+        }
+      }
+    }, 100)
+  }, [product]);
 
   const fetchProductDetails = async (filterQuery='') => {
     const result = await listProductDetails(params.id, filterQuery)
     if (result) {
       setVariantExists(true);
       setProduct(result)
-      if (!filterQuery){
+      if (filterQuery === ''){
         setSelectedSize(result.sizes[0])
         setSelectedColor(result.colors[0])
       }
       setSelectedImage(0)
       setReviews(result.reviews || [])
     } else {
-      console.error("Failed to fetch product details")
+      console.log("Failed to fetch product details")
       if (filterQuery) {
         setVariantExists(false)
       }
@@ -66,6 +92,7 @@ export default function ProductDetailPage() {
       addItem({
         id: 0,
         variant: product.variant,
+        product: product.id,
         name: product.name,
         price: product.price,
         image: product.images[0].image,
@@ -90,12 +117,12 @@ export default function ProductDetailPage() {
     }
   }
 
-  const handleVariantChange = (color_size, type) => {
+  const handleVariantChange = (color_size='', type='') => {
     let filterQuery = ''
     if (type === 'color') {
       filterQuery = `?color=${color_size.name}&size=${selectedSize}`;
     }
-    else{
+    else if (type === 'size'){
       filterQuery = `?size=${color_size}&color=${selectedColor.name}`;
     }
 
@@ -103,7 +130,7 @@ export default function ProductDetailPage() {
 
     if (type === 'color') {
       setSelectedColor(color_size);
-    } else {
+    } else if (type === 'size') {
       setSelectedSize(color_size);
     }
   }
@@ -113,8 +140,15 @@ export default function ProductDetailPage() {
       setIsBuy(true);
       return;
     }
+
+    if (isInCart(product.variant)) {
+      alert('In progress');
+    }
+    else{
+      handleAddToCart();
+      alert('In progress');
+    }
   }
-  console.log(user, isBuy)
 
   if (!user && isBuy) {
     return (
@@ -133,6 +167,29 @@ export default function ProductDetailPage() {
       </div>
     )
   }
+
+  const handleReviewSubmit = async(e) => {
+    e.preventDefault();
+    setReviewError("");
+
+    const reviewData = {
+      ...newReview,
+      product: product.id
+    };
+
+    const result = await productReviewSubmit(reviewData)
+    if (result[0] === 201){
+      setReviews([result[1].review, ...product.reviews]);
+      setNewReview({ rating: 1, comment: '' });
+      setReviewSuccess(result[1].message);
+      setTimeout(()=>{
+        setReviewSuccess("")
+      }, 2000);
+    }
+    else{
+      setReviewError(result[1]);
+    }
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -186,13 +243,9 @@ export default function ProductDetailPage() {
               <span className="text-sm text-gray-600">({product.reviews?.length} reviews)</span>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-3xl font-bold text-gray-900">₹{product.price}</span>
-              {/* {product.originalPrice && (
-                <span className="text-xl text-gray-500 line-through">${product.originalPrice}</span>
-              )} */}
-              {/* {product.originalPrice && (
-                <Badge className="bg-red-500">Save ${(product.originalPrice - product.price).toFixed(2)}</Badge>
-              )} */}
+              <span className="text-3xl font-bold text-gray-900">₹{product.offer_price}</span>
+              <span className="text-xl text-gray-500 line-through">₹{product.price}</span>
+              <Badge className="">Save {product.offer_percentage}%</Badge>
             </div>
           </div>
 
@@ -302,12 +355,12 @@ export default function ProductDetailPage() {
             <div className="text-center">
               <Truck className="h-8 w-8 mx-auto mb-2 text-purple-500" />
               <p className="text-sm font-medium">Free Shipping</p>
-              <p className="text-xs text-gray-500">On orders over $50</p>
+              <p className="text-xs text-gray-500">On orders over ₹500</p>
             </div>
             <div className="text-center">
               <RotateCcw className="h-8 w-8 mx-auto mb-2 text-purple-500" />
-              <p className="text-sm font-medium">Easy Returns</p>
-              <p className="text-xs text-gray-500">30-day return policy</p>
+              <p className="text-sm font-medium">Sorry</p>
+              <p className="text-xs text-gray-500">No return policy</p>
             </div>
             <div className="text-center">
               <Shield className="h-8 w-8 mx-auto mb-2 text-purple-500" />
@@ -383,6 +436,45 @@ export default function ProductDetailPage() {
                   </CardContent>
                 </Card>
               }
+
+              <Card>
+                <CardContent className="p-6">
+                  <h4 className="text-lg font-medium mb-4">Add Your Review</h4>
+                  <form onSubmit={handleReviewSubmit} className="space-y-4">
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((val) => (
+                        <Star
+                          key={val}
+                          onClick={() => setNewReview({ ...newReview, rating: val })}
+                          className={`h-6 w-6 cursor-pointer transition ${
+                            val <= newReview.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <textarea
+                      value={newReview.comment}
+                      onChange={(e) => setNewReview({ ...newReview, comment: e.target.value })}
+                      placeholder="Your Comment"
+                      className="w-full p-2 border rounded"
+                      rows="4"
+                    />
+                    {reviewError && (
+                      <div className="text-red-500 text-sm">
+                        {reviewError}
+                      </div>
+                    )}
+                    {reviewSuccess && (
+                      <div className="text-green-500 text-sm">
+                        {reviewSuccess}
+                      </div>
+                    )}
+                    <button type="submit" style={{background: "#111827"}} className="text-white px-4 py-2 rounded">
+                      Submit Review
+                    </button>
+                  </form>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
         </Tabs>

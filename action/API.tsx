@@ -8,6 +8,8 @@ const ENDPOINTS = {
     register_user: BASE_API_URL + "/auth/register/",
     login_user: BASE_API_URL + "/auth/login/",
     user_cart: BASE_API_URL + "/cart/",
+    product_review_submit: BASE_API_URL + "/products/submit-review/",
+    contact_submit: BASE_API_URL + "/support/contact-us/",
 };
 
 export { ENDPOINTS };

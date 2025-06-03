@@ -91,7 +91,8 @@ const handleGoogleLogin = async (credentialResponse: any) => {
       setEmail("")
       setPassword("")
       loggedIn(result[1].name, result[1].email, result[1].access)
-      router.push("/")
+      localStorage.removeItem('cart')
+      window.location.href = '/'
     }
     else{
       setError(result[1])

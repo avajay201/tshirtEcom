@@ -80,16 +80,16 @@ export function Footer() {
           <div>
             <h3 className="font-semibold text-lg mb-4">Contact Info</h3>
             <div className="space-y-2 text-gray-400">
-              <p>123 Fashion Street</p>
-              <p>Style City, SC 12345</p>
-              <p>Phone: (555) 123-4567</p>
-              <p>Email: hello@teestyle.com</p>
+              <p>Mohali</p>
+              <p>Punjab</p>
+              <p>Phone: +91-1234567890</p>
+              <p>Email: help@teestyle.com</p>
             </div>
           </div>
         </div>
 
         <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-          <p>&copy; 2024 TeeStyle. All rights reserved.</p>
+          <p>&copy; 2025 TeeStyle. All rights reserved.</p>
         </div>
       </div>
     </footer>

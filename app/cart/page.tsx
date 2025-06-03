@@ -29,6 +29,10 @@ export default function CartPage() {
     )
   }
 
+  const handleCheckout = ()=>{
+    alert('In progress');
+  }
+
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold text-gray-900 mb-8">Shopping Cart</h1>
@@ -128,6 +132,7 @@ export default function CartPage() {
               <Button
                 className="w-full mt-6 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
                 size="lg"
+                onClick={handleCheckout}
               >
                 Proceed to Checkout
               </Button>

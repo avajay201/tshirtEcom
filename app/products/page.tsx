@@ -5,7 +5,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-// import { Badge } from "@/components/ui/badge"
+import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -341,10 +341,9 @@ export default function ProductsPage() {
                     </div> */}
 
                     <div className="flex items-center gap-2">
-                      <span className="text-xl font-bold text-gray-900">₹{product.price}</span>
-                      {/* {product.originalPrice && (
-                        <span className="text-sm text-gray-500 line-through">₹{product.originalPrice}</span>
-                      )} */}
+                      <span className="text-xl font-bold text-gray-900">₹{product.offer_price}</span>
+                      <span className="text-sm text-gray-500 line-through">₹{product.price}</span>
+                      <Badge className="">Save {product.offer_percentage}%</Badge>
                     </div>
                   </div>
                 </CardContent>
