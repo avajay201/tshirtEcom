@@ -24,19 +24,23 @@ export const listBanners = async () => {
   }
 };
 
-export const listProducts = async (url:string) => {
+export const listProducts = async (url: string, searchQuery: string) => {
   try {
-    const response = await axios.get(url ? url : ENDPOINTS.list_product_details, {
+    const finalUrl = searchQuery
+      ? `${url ? url : ENDPOINTS.list_product_details}?search=${searchQuery}`
+      : url ? url : ENDPOINTS.list_product_details;
+
+    const response = await axios.get(finalUrl, {
       headers: {
         'Content-Type': 'application/json'
       }
     });
+
     return response.data;
   } catch (e) {
     console.log("Banner fetching error:", e);
   }
 };
-
 export const listHomeProducts = async () => {
   try {
     const response = await axios.get(ENDPOINTS.list_home_products, {

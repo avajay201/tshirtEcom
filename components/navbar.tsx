@@ -52,14 +52,14 @@ export function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Autofocus input for mobile search
+ 
   useEffect(() => {
     if (isSearchOpen && inputRef.current) {
       inputRef.current.focus();
     }
   }, [isSearchOpen]);
 
-  // Autofocus input for desktop search
+
   useEffect(() => {
     if (isSearchOpen && desktopFormRef.current) {
       const input = desktopFormRef.current.querySelector("input");
@@ -67,7 +67,6 @@ export function Navbar() {
     }
   }, [isSearchOpen]);
 
-  // Handle form submission
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const trimmed = searchTerm.trim();
@@ -75,10 +74,15 @@ export function Navbar() {
       setIsSearchOpen(false);
       return;
     }
-    router.push(`/search?q=${encodeURIComponent(trimmed)}`).then(() => {
+    try{
+    router.push(`/products?q=${encodeURIComponent(trimmed)}`);
       setSearchTerm("");
       setIsSearchOpen(false);
-    });
+    }
+    catch(err)
+    {
+      console.error("navigation Error",err)
+    }
   };
 
   const cartItemsCount = items.length;

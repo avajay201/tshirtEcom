@@ -14,7 +14,7 @@ import { Heart, ShoppingCart, Filter } from "lucide-react"
 import { useCart } from "@/contexts/cart-context"
 import { useWishlist } from "@/contexts/wishlist-context"
 import { listProducts } from "@/action/APIAction"
-
+import { useSearchParams } from 'next/navigation';
 
 // const categories = ["men", "women", "kids", "trending"]
 const colors = ["white", "black", "blue", "red", "gray"]
@@ -31,30 +31,34 @@ export default function ProductsPage() {
   const [isNext, setIsNext] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
+
+  const searchParams = useSearchParams();
+  const searchQuery = searchParams.get('q') || '';
+
   const { addItem, isInCart, removeItem: removeFromCart } = useCart()
   const { addItem: addToWishlist, removeItem: removeFromWishlist, isInWishlist } = useWishlist()
 
-  const fetchProducts = async () => {
+    const fetchProducts = async (nextCursor = '', reset = false) => {
     setIsLoading(true);
-    const result = await listProducts(isNext);
+    const result = await listProducts(nextCursor, searchQuery);
     setIsLoading(false);
     if (result) {
       console.log('Fetched products:', result.results);
-      setProducts(prevProducts => [...prevProducts, ...result.results]);
-      if (result.next){
-        setIsNext(result.next);
-      }
-      else{
-        setIsNext('');
-      }
+      setProducts((prevProducts) => (reset ? result.results : [...prevProducts, ...result.results]));
+      setIsNext(result.next || '');
     } else {
-      console.log("Failed to fetch products");
+      console.error('Failed to fetch products');
     }
   };
 
   useEffect(() => {
-    fetchProducts();
-  }, []);
+    console.log('searchQuery:', searchQuery); 
+    setProducts([]); 
+    setIsNext(''); 
+    fetchProducts('', true); 
+  }, [searchQuery]);
+
+
 
   const filteredProducts = useMemo(() => {
     return products
