@@ -76,7 +76,7 @@ export const registerUser = async (data: object) => {
     if (e.response) {
       return [e.response.status, e.response.data.error];
     }
-    return [500, { detail: "An unexpected error occurred." }];
+    return [500, "An unexpected error occurred."];
   }
 };
 
@@ -89,7 +89,7 @@ export const loginUser = async (data: object) => {
     if (e.response) {
       return [e.response.status, e.response.data.error];
     }
-    return [500, { detail: "An unexpected error occurred." }];
+    return [500, "An unexpected error occurred."];
   }
 };
 
@@ -151,7 +151,7 @@ export const cartItemRemove = async (data: object) => {
     if (e.response) {
       return [e.response.status, e.response.data.error];
     }
-    return [500, { detail: "An unexpected error occurred." }];
+    return [500, "An unexpected error occurred."];
   }
 };
 
@@ -169,7 +169,7 @@ export const productReviewSubmit = async (data: object) => {
     if (e.response) {
       return [e.response.status, e.response.data.error];
     }
-    return [500, { detail: "An unexpected error occurred." }];
+    return [500, "An unexpected error occurred."];
   }
 };
 
@@ -187,6 +187,38 @@ export const contactSubmit = async (data: object) => {
     if (e.response) {
       return [e.response.status, e.response.data.error];
     }
-    return [500, { detail: "An unexpected error occurred." }];
+    return [500, "An unexpected error occurred."];
+  }
+};
+
+export const userAddresses = async () => {
+  try {
+    const token = authToken();
+    const response = await axios.get(ENDPOINTS.user_addresses, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (e) {
+    console.log("Banner fetching error:", e);
+  }
+};
+
+export const saveAddresses = async (data: object) => {
+  try {
+    const token = authToken();
+    const response = await axios.post(ENDPOINTS.user_addresses, data, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return [response.status, response.data];
+  } catch (e) {
+    console.log("Banner fetching error:", e);
+    if (e.response) {
+      return [e.response.status, e.response.data.error];
+    }
+    return [500, "An unexpected error occurred."];
   }
 };

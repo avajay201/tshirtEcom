@@ -1,4 +1,4 @@
-const BASE_URL = "http://192.168.1.108:8000";
+const BASE_URL = "http://192.168.19.200:8000";
 const BASE_API_URL = BASE_URL + "/api";
 
 const ENDPOINTS = {
@@ -10,6 +10,7 @@ const ENDPOINTS = {
     user_cart: BASE_API_URL + "/cart/",
     product_review_submit: BASE_API_URL + "/products/submit-review/",
     contact_submit: BASE_API_URL + "/support/contact-us/",
+    user_addresses: BASE_API_URL + "/orders/addresses/",
 };
 
 export { ENDPOINTS };

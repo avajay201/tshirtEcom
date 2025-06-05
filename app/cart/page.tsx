@@ -7,9 +7,11 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react"
 import { useCart } from "@/contexts/cart-context"
+import { useRouter } from "next/navigation"
 
 export default function CartPage() {
   const { items, updateQuantity, removeItem, total, clearCart } = useCart()
+  const router = useRouter()
 
   if (items.length === 0) {
     return (
@@ -30,7 +32,7 @@ export default function CartPage() {
   }
 
   const handleCheckout = ()=>{
-    alert('In progress');
+    router.push("/checkout")
   }
 
   return (
@@ -118,14 +120,10 @@ export default function CartPage() {
                   <span>Shipping</span>
                   <span className="text-green-600">Free</span>
                 </div>
-                <div className="flex justify-between">
-                  <span>Tax</span>
-                  <span>₹{(total * 0.08).toFixed(2)}</span>
-                </div>
                 <Separator />
                 <div className="flex justify-between text-lg font-semibold">
                   <span>Total</span>
-                  <span>₹{(total * 1.08).toFixed(2)}</span>
+                  <span>₹{total.toFixed(2)}</span>
                 </div>
               </div>
 

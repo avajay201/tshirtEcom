@@ -33,6 +33,7 @@ export default function ProductDetailPage() {
     rating: 1,
     comment: ''
   });
+  const router = useRouter();
 
   const { addItem, removeItem: removeFromCart, isInCart } = useCart()
   const { addItem: addToWishlist, removeItem: removeFromWishlist, isInWishlist } = useWishlist()
@@ -142,11 +143,11 @@ export default function ProductDetailPage() {
     }
 
     if (isInCart(product.variant)) {
-      alert('In progress');
+      router.push('/checkout');
     }
     else{
       handleAddToCart();
-      alert('In progress');
+      router.push('/checkout');
     }
   }
 
@@ -187,7 +188,12 @@ export default function ProductDetailPage() {
       }, 2000);
     }
     else{
-      setReviewError(result[1]);
+      if (result[0] === 403) {
+        setReviewError("You must be logged in to submit a review.");
+      }
+      else{
+        setReviewError(result[1]);
+      }
     }
   };
 
