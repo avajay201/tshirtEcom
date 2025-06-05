@@ -222,3 +222,35 @@ export const saveAddresses = async (data: object) => {
     return [500, "An unexpected error occurred."];
   }
 };
+
+export const editAddresses = async (data: object) => {
+  try {
+    const token = authToken();
+    const response = await axios.patch(ENDPOINTS.user_addresses, data, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return [response.status, response.data];
+  } catch (e) {
+    console.log("Banner fetching error:", e);
+    if (e.response) {
+      return [e.response.status, e.response.data.error];
+    }
+    return [500, "An unexpected error occurred."];
+  }
+};
+
+export const shippingCharges = async (data: object) => {
+  try {
+    const token = authToken();
+    const response = await axios.get(ENDPOINTS.shipping_charges + `?p=${data.p}&d_pc=${data.d_pc}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (e) {
+    console.log("Banner fetching error:", e);
+  }
+};

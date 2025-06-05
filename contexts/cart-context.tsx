@@ -24,13 +24,14 @@ interface CartContextType {
   removeItem: (id: number) => void
   updateQuantity: (id: number, quantity: number) => void
   clearCart: () => void
-  total: number
+  total: number,
+  isLoading: boolean,
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [items, setItems] = useState<CartItem[]>([])
 
   const fetchCartItems = async()=>{
@@ -145,6 +146,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         updateQuantity,
         clearCart,
         total,
+        isLoading,
       }}
     >
       {children}
