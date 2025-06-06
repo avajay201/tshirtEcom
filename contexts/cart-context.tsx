@@ -26,6 +26,7 @@ interface CartContextType {
   clearCart: () => void
   total: number,
   isLoading: boolean,
+  fetchCartItems: () => void,
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
@@ -37,10 +38,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const fetchCartItems = async()=>{
     setIsLoading(true);
     const result = await cartItems();
+    setIsLoading(false);
     if (result){
       setItems(result)
     }
-    setIsLoading(false);
   }
 
   useEffect(()=>{
@@ -54,6 +55,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     else{
       fetchCartItems();
     }
+    setIsLoading(false);
   }, [])
 
   const addItem = async (newItem: CartItem) => {
@@ -147,6 +149,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         clearCart,
         total,
         isLoading,
+        fetchCartItems,
       }}
     >
       {children}

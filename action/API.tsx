@@ -12,6 +12,7 @@ const ENDPOINTS = {
     contact_submit: BASE_API_URL + "/support/contact-us/",
     user_addresses: BASE_API_URL + "/orders/addresses/",
     shipping_charges: BASE_API_URL + "/orders/shipping-charges/",
+    orders: BASE_API_URL + "/orders/",
 };
 
 export { ENDPOINTS };

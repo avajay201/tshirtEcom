@@ -254,3 +254,35 @@ export const shippingCharges = async (data: object) => {
     console.log("Banner fetching error:", e);
   }
 };
+
+export const orderCreate = async (data: object) => {
+  try {
+    const token = authToken();
+    const response = await axios.post(ENDPOINTS.orders, data, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return [response.status, response.data];
+  } catch (e) {
+    console.log("Banner fetching error:", e);
+    if (e.response) {
+      return [e.response.status, e.response.data.error];
+    }
+    return [500, "An unexpected error occurred."];
+  }
+};
+
+export const myOrders = async () => {
+  try {
+    const token = authToken();
+    const response = await axios.get(ENDPOINTS.orders, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (e) {
+    console.log("Banner fetching error:", e);
+  }
+};

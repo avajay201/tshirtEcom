@@ -33,4 +33,10 @@ function Badge({ className, variant, ...props }: BadgeProps) {
   )
 }
 
-export { Badge, badgeVariants }
+function OrderBadge({ className, variant, ...props }: BadgeProps) {
+  return (
+    <div className={cn(badgeVariants({ variant }), className)} {...props} style={{ fontSize:'8px', color: "white" }}/>
+  )
+}
+
+export { Badge, badgeVariants, OrderBadge }

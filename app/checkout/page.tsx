@@ -8,12 +8,12 @@ import { Plus, MapPin, Minus, Trash2, CheckCircle } from "lucide-react"
 import { useCart } from "@/contexts/cart-context"
 import { useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { saveAddresses, userAddresses, editAddresses, shippingCharges as getShippingCharges } from "@/action/APIAction"
+import { saveAddresses, userAddresses, editAddresses, shippingCharges as getShippingCharges, orderCreate } from "@/action/APIAction"
 import { LoaderOverlay } from "@/components/ui/LoaderOverlay"
 
 
 export default function CheckoutPage() {
-  const { items, updateQuantity, removeItem, total, isLoading: cartLoading } = useCart()
+  const { items, updateQuantity, removeItem, total, isLoading: cartLoading, fetchCartItems } = useCart()
   const router = useRouter()
   const [savedAddresses, setSavedAddresses] = useState([])
   const [showAddressForm, setShowAddressForm] = useState(false);
@@ -39,6 +39,7 @@ export default function CheckoutPage() {
   const productVariantID = queryParams.get('p') || '';
   const [shippingCharges, setShippingCharges] = useState(0);
   const [estimateDeliveryDate, setEstimateDeliveryDate] = useState(null);
+  const [orderError, setOrderError] = useState(null);
 
   useEffect(() => {
     if (items.length === 0 && !cartLoading) {
@@ -160,6 +161,12 @@ export default function CheckoutPage() {
         );
         setSavedAddresses(updatedList);
         setsuccess(result[1].message);
+
+        console.log('shippingCharges>>', shippingCharges, 'estimateDeliveryDate>>', estimateDeliveryDate)
+
+        if (shippingCharges && estimateDeliveryDate){
+          fetchShippingCharges(editingAddressId, result[1].address)
+        }
       } else {
         setError(result[1]);
         isError = true;
@@ -197,20 +204,35 @@ export default function CheckoutPage() {
     }, 1500)
   }
 
-  const handleCheckout = () => {
+  const handleCheckout = async() => {
+    setOrderError(null)
     setAddressError(null);
     if (!selectedAddress){
       setAddressError('Please select a delivery address');
       return
     }
-    alert("Checkout flow to be implemented")
+
+    const data = {
+      items: showToItems.map(item => item.variant),
+      shipping_address_id: selectedAddress,
+    }
+    setisLoading(true);
+    const result = await orderCreate(data);
+    setisLoading(false);
+    if (result[0] === 201){
+      fetchCartItems();
+      router.push('/orders');
+    }
+    else{
+      setOrderError(result[1])
+    }
   }
 
-  const fetchShippingCharges = async (id)=>{
+  const fetchShippingCharges = async (id, addrs=null)=>{
     setAddressError(null);
     setisLoading(true);
     const addr = savedAddresses.filter(addr => addr.id === id)[0]
-    const result = await getShippingCharges({p: showToItems.length, d_pc: addr.postal_code});
+    const result = await getShippingCharges({p: showToItems.length, d_pc: addrs ? addrs.postal_code : addr.postal_code});
     setisLoading(false);
     if (result){
       setShippingCharges(result.charges)
@@ -267,7 +289,7 @@ export default function CheckoutPage() {
                       key={index}
                       style={{borderWidth: selectedAddress === address.id ? 2: 1}}
                       className={`relative border rounded-lg p-4 hover:border-purple-500 cursor-pointer ${selectedAddress === address.id && "border-purple-500"}`}
-                      onClick={()=>handleAddressSelection(address)}
+                      onClick={()=>selectedAddress !== address.id &&handleAddressSelection(address)}
                     >
                       {selectedAddress === address.id && (
                         <CheckCircle
@@ -290,6 +312,7 @@ export default function CheckoutPage() {
                       <p className="font-medium">{address.full_name}</p>
                       <p className="text-sm text-gray-600">{address.address_line1}, {address.address_line2 && address.address_line2 + ','} {address.city}, {address.state} - {address.postal_code}</p>
                       <p className="text-sm text-gray-600">Phone: {address.phone_number}{address.alt_phone_number && ', ' + address.alt_phone_number}</p>
+                      {selectedAddress === address.id && estimateDeliveryDate && <p className="mt-2 text-green-600 font-bold">Delivery By - {estimateDeliveryDate}</p>}
                     </div>
                   ))}
                 </div>
@@ -504,6 +527,7 @@ export default function CheckoutPage() {
 
         <div className="lg:col-span-1">
           <Card className="sticky top-24">
+            {orderError && <div className="text-red-500 text-sm font-bold text-center mt-2">{orderError}</div>}
             <CardContent className="p-6 space-y-4">
               <h2 className="text-xl font-semibold mb-2">Price Details</h2>
 

@@ -118,7 +118,7 @@ export default function ProductsPage() {
         variant: product.variant,
         product: product.id,
         name: product.name,
-        price: product.price,
+        price: product.offer_price,
         image: product.images[0].image,
         quantity: 1,
         size: product.sizes[0],
